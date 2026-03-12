@@ -1,0 +1,930 @@
+{
+	"compiler": {
+		"version": "0.8.30+commit.73712a01"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "actorAddress",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "enum LogisticsTracking.ActorRole",
+						"name": "role",
+						"type": "uint8"
+					}
+				],
+				"name": "ActorRegistered",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "checkpointId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "actor",
+						"type": "address"
+					}
+				],
+				"name": "CheckpointRecorded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"name": "DeliveryConfirmed",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "incidentId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "enum LogisticsTracking.IncidentType",
+						"name": "incidentType",
+						"type": "uint8"
+					}
+				],
+				"name": "IncidentReported",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "incidentId",
+						"type": "uint256"
+					}
+				],
+				"name": "IncidentResolved",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "product",
+						"type": "string"
+					}
+				],
+				"name": "ShipmentCreated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "enum LogisticsTracking.ShipmentStatus",
+						"name": "newStatus",
+						"type": "uint8"
+					}
+				],
+				"name": "ShipmentStatusChanged",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "actorShipments",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "actors",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "actorAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "enum LogisticsTracking.ActorRole",
+						"name": "role",
+						"type": "uint8"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "admin",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					}
+				],
+				"name": "cancelShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "checkpoints",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "actor",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "checkpointType",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "notes",
+						"type": "string"
+					},
+					{
+						"internalType": "int256",
+						"name": "temperature",
+						"type": "int256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					}
+				],
+				"name": "confirmDelivery",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_recipient",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "_product",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_origin",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_destination",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "_requiresColdChain",
+						"type": "bool"
+					}
+				],
+				"name": "createShipment",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_actorAddress",
+						"type": "address"
+					}
+				],
+				"name": "deactivateActor",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_actorAddress",
+						"type": "address"
+					}
+				],
+				"name": "getActor",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "actorAddress",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"internalType": "enum LogisticsTracking.ActorRole",
+								"name": "role",
+								"type": "uint8"
+							},
+							{
+								"internalType": "string",
+								"name": "location",
+								"type": "string"
+							},
+							{
+								"internalType": "bool",
+								"name": "isActive",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct LogisticsTracking.Actor",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_actor",
+						"type": "address"
+					}
+				],
+				"name": "getActorShipments",
+				"outputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "",
+						"type": "uint256[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_id",
+						"type": "uint256"
+					}
+				],
+				"name": "getShipment",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "sender",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "recipient",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "product",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "origin",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "destination",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "dateCreated",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "dateDelivered",
+								"type": "uint256"
+							},
+							{
+								"internalType": "enum LogisticsTracking.ShipmentStatus",
+								"name": "status",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint256[]",
+								"name": "checkpointIds",
+								"type": "uint256[]"
+							},
+							{
+								"internalType": "uint256[]",
+								"name": "incidentIds",
+								"type": "uint256[]"
+							},
+							{
+								"internalType": "bool",
+								"name": "requiresColdChain",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct LogisticsTracking.Shipment",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_id",
+						"type": "uint256"
+					}
+				],
+				"name": "getShipmentCheckpoints",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "shipmentId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "actor",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "location",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "checkpointType",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "notes",
+								"type": "string"
+							},
+							{
+								"internalType": "int256",
+								"name": "temperature",
+								"type": "int256"
+							}
+						],
+						"internalType": "struct LogisticsTracking.Checkpoint[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "incidents",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "shipmentId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum LogisticsTracking.IncidentType",
+						"name": "incidentType",
+						"type": "uint8"
+					},
+					{
+						"internalType": "address",
+						"name": "reporter",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "resolved",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "nextCheckpointId",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "nextIncidentId",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "nextShipmentId",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "_location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_checkpointType",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_notes",
+						"type": "string"
+					},
+					{
+						"internalType": "int256",
+						"name": "_temperature",
+						"type": "int256"
+					}
+				],
+				"name": "recordCheckpoint",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_name",
+						"type": "string"
+					},
+					{
+						"internalType": "enum LogisticsTracking.ActorRole",
+						"name": "_role",
+						"type": "uint8"
+					},
+					{
+						"internalType": "string",
+						"name": "_location",
+						"type": "string"
+					}
+				],
+				"name": "registerActor",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum LogisticsTracking.IncidentType",
+						"name": "_type",
+						"type": "uint8"
+					},
+					{
+						"internalType": "string",
+						"name": "_desc",
+						"type": "string"
+					}
+				],
+				"name": "reportIncident",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_incidentId",
+						"type": "uint256"
+					}
+				],
+				"name": "resolveIncident",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "shipments",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "product",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "origin",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "destination",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "dateCreated",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "dateDelivered",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum LogisticsTracking.ShipmentStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "bool",
+						"name": "requiresColdChain",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum LogisticsTracking.ShipmentStatus",
+						"name": "_newStatus",
+						"type": "uint8"
+					}
+				],
+				"name": "updateShipmentStatus",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					}
+				],
+				"name": "verifyTemperatureCompliance",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "Sistema de trazabilidad logística con soporte para cadena de frío e incidencias.",
+			"kind": "dev",
+			"methods": {},
+			"title": "LogisticsTracking",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"src/LogisticsTracking.sol": "LogisticsTracking"
+		},
+		"evmVersion": "prague",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"src/LogisticsTracking.sol": {
+			"keccak256": "0xc1a0643e79a12c8ab643ae14be27c36eebe20f1b3f2a5887ef0d658753908c62",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://e380abbc7deb4b6fc502f1233cb7540a72b8719bf166c30703581ed65d7de314",
+				"dweb:/ipfs/QmTKgepUN767xRpMnQ5GBAFBJUhErJFk1Pz2sVEyWob9AA"
+			]
+		}
+	},
+	"version": 1
+}

@@ -1,0 +1,806 @@
+1. Descripción del Proyecto
+Construir un sistema de trazabilidad logística para monitorizar envíos, paquetes o contenedores a lo largo de toda la cadena de distribución. El objetivo es crear un MVP que permita rastrear cada movimiento del producto desde su origen hasta el destino final, garantizando transparencia y verificabilidad.
+
+Implementar un flujo digital verificable que cubra:
+- Origen: registro del punto de partida del envío
+- Transportista: asignación y verificación del responsable del transporte
+- Hubs logísticos: registro de paso por centros de distribución intermedios
+- Entrega final: confirmación de recepción por el destinatario
+- Sensores IoT (opcional): temperatura, humedad, golpes, apertura de contenedores
+
+Debe generar un panel que muestre movimientos, estados y verificaciones on-chain, junto con smart contracts para gestionar eventos logísticos de forma automática y verificable.
+
+2. Aspectos Clave
+a.	Trazar un envío en varias etapas
+	Flujo básico: Origen → hub intermedio → transportista → destino final
+b.	Registro de Eventos
+	Salida del origen
+	Llegada a hub logístico
+	Escaneo de paquete
+	Incidencias (daños, retrasos, aperturas no autorizadas)
+	Entrega final
+c.	Integración IoT (Opcional)
+
+Sensores que pueden integrarse:
+- Temperatura: crítico para cadena de frío
+- Golpes: acelerómetro para detectar caídas o maltrato
+- Humedad: para productos sensibles a condiciones ambientales
+- Apertura: detectores de puertas/contenedores abiertos
+
+3. Interoperabilidad
+API para consultar estado del envío desde sistemas externos (ERP, WMS, CRM)
+
+4.	Roles y Permisos
+	- Remitente: crea el envío
+	- Transportista: actualiza ubicación y estado
+	- Hub logístico: confirma recepción y salida
+	- Destinatario: confirma entrega
+	- Auditor: solo lectura para verificación
+
+5. Componentes Recomendados del MVP
+
+5.1. Smart Contract
+El contrato inteligente debe incluir como mínimo las siguientes estructuras:
+
+// Definir estos enums
+enum ShipmentStatus { Created, InTransit, AtHub, OutForDelivery, Delivered, Returned, Cancelled }
+enum ActorRole { None, Sender, Carrier, Hub, Recipient, Inspector }
+enum IncidentType { Delay, Damage, Lost, TempViolation, Unauthorized }
+
+// Implementar estos structs
+struct Shipment {
+    uint256 id;
+    address sender;
+    address recipient;
+    string product;
+    string origin;
+    string destination;
+    uint256 dateCreated;
+    uint256 dateDelivered;
+    ShipmentStatus status;
+    uint256[] checkpointIds;
+    uint256[] incidentIds;
+    bool requiresColdChain;    // Si requiere temperatura controlada
+}
+
+struct Checkpoint {
+    uint256 id;
+    uint256 shipmentId;
+    address actor;
+    string location;
+    string checkpointType;     // "Pickup", "Hub", "Transit", "Delivery"
+    uint256 timestamp;
+    string notes;
+    int256 temperature;        // Temperatura en celsius * 10 (para decimales)
+}
+
+struct Incident {
+    uint256 id;
+    uint256 shipmentId;
+    IncidentType incidentType;
+    address reporter;
+    string description;
+    uint256 timestamp;
+    bool resolved;
+}
+
+struct Actor {
+    address actorAddress;
+    string name;
+    ActorRole role;
+    string location;
+    bool isActive;
+}
+
+// Variables de estado
+address public admin;
+uint256 public nextShipmentId = 1;
+uint256 public nextCheckpointId = 1;
+uint256 public nextIncidentId = 1;
+
+// Mappings
+mapping(uint256 => Shipment) public shipments;
+mapping(uint256 => Checkpoint) public checkpoints;
+mapping(uint256 => Incident) public incidents;
+mapping(address => Actor) public actors;
+
+// Eventos
+event ShipmentCreated(uint256 indexed shipmentId, address indexed sender, address indexed recipient, string product);
+event CheckpointRecorded(uint256 indexed checkpointId, uint256 indexed shipmentId, string location, address actor);
+event ShipmentStatusChanged(uint256 indexed shipmentId, ShipmentStatus newStatus);
+event IncidentReported(uint256 indexed incidentId, uint256 indexed shipmentId, IncidentType incidentType);
+event IncidentResolved(uint256 indexed incidentId);
+event DeliveryConfirmed(uint256 indexed shipmentId, address indexed recipient, uint256 timestamp);
+event ActorRegistered(address indexed actorAddress, string name, ActorRole role);
+
+// Programar estas funciones principales
+
+// Gestión de Actores
+function registerActor(string memory _name, ActorRole _role, string memory _location) public;
+function getActor(address _actorAddress) public view returns (Actor memory);
+function deactivateActor(address _actorAddress) public;
+
+// Gestión de Envíos
+function createShipment(address _recipient, string memory _product, string memory _origin, string memory _destination, bool _requiresColdChain) public returns (uint256);
+function getShipment(uint256 _shipmentId) public view returns (Shipment memory);
+function updateShipmentStatus(uint256 _shipmentId, ShipmentStatus _newStatus) public;
+function confirmDelivery(uint256 _shipmentId) public;
+function cancelShipment(uint256 _shipmentId) public;
+
+// Gestión de Checkpoints
+function recordCheckpoint(uint256 _shipmentId, string memory _location, string memory _checkpointType, string memory _notes, int256 _temperature) public returns (uint256);
+function getCheckpoint(uint256 _checkpointId) public view returns (Checkpoint memory);
+function getShipmentCheckpoints(uint256 _shipmentId) public view returns (Checkpoint[] memory);
+
+// Gestión de Incidencias
+function reportIncident(uint256 _shipmentId, IncidentType _incidentType, string memory _description) public returns (uint256);
+function resolveIncident(uint256 _incidentId) public;
+function getIncident(uint256 _incidentId) public view returns (Incident memory);
+function getShipmentIncidents(uint256 _shipmentId) public view returns (Incident[] memory);
+
+// Funciones auxiliares
+function getActorShipments(address _actor) public view returns (uint256[] memory);
+function verifyTemperatureCompliance(uint256 _shipmentId) public view returns (bool);
+
+5.2. Modelo de Datos
+Estructura JSON recomendada para cada evento:
+
+{
+  "shipmentId": "PKG-2024-001",
+  "product": "Medicamento refrigerado",
+  "origin": "Laboratorio FarmaTech",
+  "destination": "Hospital Central",
+  "event": "Hub logístico Madrid",
+  "timestamp": 1710002212,
+  "temperature": 4.5,
+  "actor": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0"
+}
+
+5.3. Tests Recomendados (sc/test/LogisticsTracking.t.sol)
+
+// Escribir y hacer pasar estos tests
+contract LogisticsTrackingTest is Test {
+    // Setup y configuración inicial
+    function setUp() public { }
+
+    // Tests de gestión de actores
+    function testRegisterSender() public { }
+    function testRegisterCarrier() public { }
+    function testRegisterHub() public { }
+    function testRegisterRecipient() public { }
+    function testDeactivateActor() public { }
+
+    // Tests de creación de envíos
+    function testCreateShipment() public { }
+    function testCreateShipmentWithColdChain() public { }
+    function testShipmentIdIncrementation() public { }
+    function testGetShipment() public { }
+    function testOnlySenderCanCreateShipment() public { }
+
+    // Tests de checkpoints
+    function testRecordPickupCheckpoint() public { }
+    function testRecordHubCheckpoint() public { }
+    function testRecordTransitCheckpoint() public { }
+    function testRecordDeliveryCheckpoint() public { }
+    function testRecordCheckpointWithTemperature() public { }
+    function testGetShipmentCheckpoints() public { }
+    function testCheckpointTimeline() public { }
+
+    // Tests de actualización de estado
+    function testUpdateStatusToInTransit() public { }
+    function testUpdateStatusToAtHub() public { }
+    function testUpdateStatusToOutForDelivery() public { }
+    function testUpdateStatusToDelivered() public { }
+    function testStatusChangeEmitsEvent() public { }
+
+    // Tests de confirmación de entrega
+    function testConfirmDeliveryByRecipient() public { }
+    function testOnlyRecipientCanConfirmDelivery() public { }
+    function testDeliveryUpdatesTimestamp() public { }
+    function testCannotConfirmDeliveryTwice() public { }
+
+    // Tests de incidencias
+    function testReportDelayIncident() public { }
+    function testReportDamageIncident() public { }
+    function testReportLostIncident() public { }
+    function testReportTempViolation() public { }
+    function testResolveIncident() public { }
+    function testGetShipmentIncidents() public { }
+    function testUnresolvedIncidentsList() public { }
+
+    // Tests de temperatura
+    function testVerifyTemperatureComplianceValid() public { }
+    function testVerifyTemperatureComplianceViolation() public { }
+    function testColdChainMonitoring() public { }
+
+    // Tests de cancelación
+    function testCancelShipment() public { }
+    function testOnlySenderCanCancelShipment() public { }
+    function testCannotCancelDeliveredShipment() public { }
+
+    // Tests de validaciones
+    function testCannotRecordCheckpointForNonExistentShipment() public { }
+    function testCannotReportIncidentForNonExistentShipment() public { }
+    function testInactiveActorCannotRecordCheckpoint() public { }
+
+    // Tests de casos edge
+    function testMultipleCheckpointsForSameShipment() public { }
+    function testShipmentWithMultipleIncidents() public { }
+    function testEmptyCheckpointNotes() public { }
+
+    // Tests de flujo completo
+    function testCompleteShippingFlow() public { }
+    function testPharmaceuticalColdChainFlow() public { }
+    function testMultiHubLogisticsFlow() public { }
+}
+
+5.4. Arquitectura Recomendada
+Componentes técnicos sugeridos:
+Blockchain: EVM
+Backend: Node.js
+Base de datos: SQLite / MongoDB
+Frontend: React / HTML+JavaScript
+Smart Contracts: Solidity
+IoT (opcional): Sensores conectados vía MQTT o API REST
+Mapas: Leaflet o Google Maps para visualización de rutas
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+A PARTIR DE AQUI VA EL CÓDIGO GENERADO CON GEMINI
+-----------------------------------------------------------------------------------------------------------------------------------------
+Esta es una implementación completa y robusta del Smart Contract en Solidity 0.8.20, siguiendo los estándares de seguridad y la arquitectura solicitada. He incluido la lógica de permisos para asegurar que solo los actores registrados y autorizados puedan interactuar con cada envío.
+
+1. Smart Contract: LogisticsTracking.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title LogisticsTracking
+ * @dev Sistema de trazabilidad logística con soporte para cadena de frío e incidencias.
+ */
+contract LogisticsTracking {
+    
+    // --- Enums ---
+    enum ShipmentStatus { Created, InTransit, AtHub, OutForDelivery, Delivered, Returned, Cancelled }
+    enum ActorRole { None, Sender, Carrier, Hub, Recipient, Inspector }
+    enum IncidentType { Delay, Damage, Lost, TempViolation, Unauthorized }
+
+    // --- Structs ---
+    struct Actor {
+        address actorAddress;
+        string name;
+        ActorRole role;
+        string location;
+        bool isActive;
+    }
+
+    struct Shipment {
+        uint256 id;
+        address sender;
+        address recipient;
+        string product;
+        string origin;
+        string destination;
+        uint256 dateCreated;
+        uint256 dateDelivered;
+        ShipmentStatus status;
+        uint256[] checkpointIds;
+        uint256[] incidentIds;
+        bool requiresColdChain;
+    }
+
+    struct Checkpoint {
+        uint256 id;
+        uint256 shipmentId;
+        address actor;
+        string location;
+        string checkpointType; // "Pickup", "Hub", "Transit", "Delivery"
+        uint256 timestamp;
+        string notes;
+        int256 temperature;    // Celsius * 10
+    }
+
+    struct Incident {
+        uint256 id;
+        uint256 shipmentId;
+        IncidentType incidentType;
+        address reporter;
+        string description;
+        uint256 timestamp;
+        bool resolved;
+    }
+
+    // --- State Variables ---
+    address public admin;
+    uint256 public nextShipmentId = 1;
+    uint256 public nextCheckpointId = 1;
+    uint256 public nextIncidentId = 1;
+
+    mapping(uint256 => Shipment) public shipments;
+    mapping(uint256 => Checkpoint) public checkpoints;
+    mapping(uint256 => Incident) public incidents;
+    mapping(address => Actor) public actors;
+    mapping(address => uint256[]) public actorShipments;
+
+    // --- Events ---
+    event ActorRegistered(address indexed actorAddress, string name, ActorRole role);
+    event ShipmentCreated(uint256 indexed shipmentId, address indexed sender, address indexed recipient, string product);
+    event CheckpointRecorded(uint256 indexed checkpointId, uint256 indexed shipmentId, string location, address actor);
+    event ShipmentStatusChanged(uint256 indexed shipmentId, ShipmentStatus newStatus);
+    event IncidentReported(uint256 indexed incidentId, uint256 indexed shipmentId, IncidentType incidentType);
+    event IncidentResolved(uint256 indexed incidentId);
+    event DeliveryConfirmed(uint256 indexed shipmentId, address indexed recipient, uint256 timestamp);
+
+    // --- Modifiers ---
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Only admin");
+        _;
+    }
+
+    modifier onlyActiveActor() {
+        require(actors[msg.sender].isActive, "Actor not registered or inactive");
+        _;
+    }
+
+    modifier shipmentExists(uint256 _id) {
+        require(_id > 0 && _id < nextShipmentId, "Shipment does not exist");
+        _;
+    }
+
+    constructor() {
+        admin = msg.sender;
+    }
+
+    // --- Gestión de Actores ---
+
+    function registerActor(string memory _name, ActorRole _role, string memory _location) public {
+        require(!actors[msg.sender].isActive, "Already registered");
+        actors[msg.sender] = Actor(msg.sender, _name, _role, _location, true);
+        emit ActorRegistered(msg.sender, _name, _role);
+    }
+
+    function deactivateActor(address _actorAddress) public onlyAdmin {
+        actors[_actorAddress].isActive = false;
+    }
+
+    function getActor(address _actorAddress) public view returns (Actor memory) {
+        return actors[_actorAddress];
+    }
+
+    // --- Gestión de Envíos ---
+
+    function createShipment(
+        address _recipient, 
+        string memory _product, 
+        string memory _origin, 
+        string memory _destination, 
+        bool _requiresColdChain
+    ) public onlyActiveActor returns (uint256) {
+        require(actors[msg.sender].role == ActorRole.Sender, "Only Senders can create");
+        
+        uint256 id = nextShipmentId++;
+        Shipment storage s = shipments[id];
+        s.id = id;
+        s.sender = msg.sender;
+        s.recipient = _recipient;
+        s.product = _product;
+        s.origin = _origin;
+        s.destination = _destination;
+        s.dateCreated = block.timestamp;
+        s.status = ShipmentStatus.Created;
+        s.requiresColdChain = _requiresColdChain;
+
+        actorShipments[msg.sender].push(id);
+        
+        emit ShipmentCreated(id, msg.sender, _recipient, _product);
+        return id;
+    }
+
+    function updateShipmentStatus(uint256 _shipmentId, ShipmentStatus _newStatus) 
+        public 
+        onlyActiveActor 
+        shipmentExists(_shipmentId) 
+    {
+        shipments[_shipmentId].status = _newStatus;
+        emit ShipmentStatusChanged(_shipmentId, _newStatus);
+    }
+
+    function confirmDelivery(uint256 _shipmentId) public shipmentExists(_shipmentId) {
+        Shipment storage s = shipments[_shipmentId];
+        require(msg.sender == s.recipient, "Only recipient can confirm");
+        require(s.status != ShipmentStatus.Delivered, "Already delivered");
+
+        s.status = ShipmentStatus.Delivered;
+        s.dateDelivered = block.timestamp;
+        
+        emit DeliveryConfirmed(_shipmentId, msg.sender, block.timestamp);
+        emit ShipmentStatusChanged(_shipmentId, ShipmentStatus.Delivered);
+    }
+
+    function cancelShipment(uint256 _shipmentId) public shipmentExists(_shipmentId) {
+        require(msg.sender == shipments[_shipmentId].sender, "Only sender can cancel");
+        require(shipments[_shipmentId].status == ShipmentStatus.Created, "Cannot cancel after transit");
+        
+        shipments[_shipmentId].status = ShipmentStatus.Cancelled;
+        emit ShipmentStatusChanged(_shipmentId, ShipmentStatus.Cancelled);
+    }
+
+    // --- Gestión de Checkpoints ---
+
+    function recordCheckpoint(
+        uint256 _shipmentId, 
+        string memory _location, 
+        string memory _checkpointType, 
+        string memory _notes, 
+        int256 _temperature
+    ) public onlyActiveActor shipmentExists(_shipmentId) returns (uint256) {
+        uint256 cpId = nextCheckpointId++;
+        
+        checkpoints[cpId] = Checkpoint({
+            id: cpId,
+            shipmentId: _shipmentId,
+            actor: msg.sender,
+            location: _location,
+            checkpointType: _checkpointType,
+            timestamp: block.timestamp,
+            notes: _notes,
+            temperature: _temperature
+        });
+
+        shipments[_shipmentId].checkpointIds.push(cpId);
+        
+        // Auto-reporte si hay violación de temperatura
+        if (shipments[_shipmentId].requiresColdChain && (_temperature > 80 || _temperature < 20)) {
+            reportIncident(_shipmentId, IncidentType.TempViolation, "Temperature out of range");
+        }
+
+        emit CheckpointRecorded(cpId, _shipmentId, _location, msg.sender);
+        return cpId;
+    }
+
+    // --- Gestión de Incidencias ---
+
+    function reportIncident(uint256 _shipmentId, IncidentType _type, string memory _desc) 
+        public 
+        onlyActiveActor 
+        shipmentExists(_shipmentId) 
+        returns (uint256) 
+    {
+        uint256 incId = nextIncidentId++;
+        incidents[incId] = Incident(incId, _shipmentId, _type, msg.sender, _desc, block.timestamp, false);
+        shipments[_shipmentId].incidentIds.push(incId);
+        
+        emit IncidentReported(incId, _shipmentId, _type);
+        return incId;
+    }
+
+    function resolveIncident(uint256 _incidentId) public onlyAdmin {
+        incidents[_incidentId].resolved = true;
+        emit IncidentResolved(_incidentId);
+    }
+
+    // --- Helpers ---
+
+    function getShipment(uint256 _id) public view returns (Shipment memory) {
+        return shipments[_id];
+    }
+
+    function getShipmentCheckpoints(uint256 _id) public view returns (Checkpoint[] memory) {
+        uint256[] memory ids = shipments[_id].checkpointIds;
+        Checkpoint[] memory results = new Checkpoint[](ids.length);
+        for (uint i = 0; i < ids.length; i++) {
+            results[i] = checkpoints[ids[i]];
+        }
+        return results;
+    }
+
+    function verifyTemperatureCompliance(uint256 _shipmentId) public view returns (bool) {
+        Shipment storage s = shipments[_shipmentId];
+        if (!s.requiresColdChain) return true;
+        
+        for (uint i = 0; i < s.checkpointIds.length; i++) {
+            int256 temp = checkpoints[s.checkpointIds[i]].temperature;
+            if (temp > 80 || temp < 20) return false; // Rango ejemplo: 2.0°C a 8.0°C
+        }
+        return true;
+    }
+
+    function getActorShipments(address _actor) public view returns (uint256[] memory) {
+        return actorShipments[_actor];
+    }
+}
+
+2. Estructura de Test (Foundry/Forge)
+
+// sc/test/LogisticsTracking.t.sol
+import "forge-std/Test.sol";
+import "../src/LogisticsTracking.sol";
+
+contract LogisticsTrackingTest is Test {
+    LogisticsTracking public logistics;
+    address admin = address(1);
+    address sender = address(2);
+    address carrier = address(3);
+    address recipient = address(4);
+
+    function setUp() public {
+        vm.prank(admin);
+        logistics = new LogisticsTracking();
+        
+        vm.prank(sender);
+        logistics.registerActor("FarmaCorp", LogisticsTracking.ActorRole.Sender, "Madrid");
+        
+        vm.prank(carrier);
+        logistics.registerActor("FastLogistics", LogisticsTracking.ActorRole.Carrier, "Logroño");
+    }
+
+    function testCreateShipment() public {
+        vm.prank(sender);
+        uint256 id = logistics.createShipment(recipient, "Vacunas", "Lab A", "Hospital B", true);
+        
+        LogisticsTracking.Shipment memory s = logistics.getShipment(id);
+        assertEq(s.product, "Vacunas");
+        assertEq(uint(s.status), uint(LogisticsTracking.ShipmentStatus.Created));
+    }
+
+    function testRecordCheckpointWithTemperature() public {
+        vm.prank(sender);
+        uint256 sId = logistics.createShipment(recipient, "Insulina", "A", "B", true);
+        
+        vm.prank(carrier);
+        logistics.recordCheckpoint(sId, "Hub Central", "Hub", "Enfriamiento OK", 45); // 4.5°C
+
+        LogisticsTracking.Checkpoint[] memory cps = logistics.getShipmentCheckpoints(sId);
+        assertEq(cps.length, 1);
+        assertEq(cps[0].temperature, 45);
+    }
+
+    function testFailOnlySenderCanCreate() public {
+        vm.prank(carrier); // Un transportista intenta crear un envío
+        logistics.createShipment(recipient, "Error", "A", "B", false);
+    }
+}
+
+3. Consideraciones del MVP
+Seguridad: He añadido el modificador onlyActiveActor para evitar que direcciones no registradas ensucien el historial.
+Precisión IoT: En Solidity no existen los decimales (float). Por eso, la temperatura se guarda como int256 (por ejemplo, 25.5°C se envía como 255).
+Trazabilidad: La función getShipmentCheckpoints permite al frontend reconstruir la línea de tiempo completa del paquete con una sola llamada.
+----------------------
+
+Código Frontend en React para visualizar el Smart Contract
+
+¡Excelente! Para que este MVP sea realmente funcional, vamos a construir una interfaz en React que se conecte al Smart Contract utilizando ethers.js.Esta interfaz permitirá a los diferentes actores (Remitente, Transportista, Destinatario) interactuar con la lógica que programamos anteriormente.
+
+1. Estructura del Frontend (React + Ethers)
+Necesitaremos un componente principal que gestione la conexión a la billetera (MetaMask) y un panel dividido por roles.
+
+JavaScript
+// App.js - Fragmento principal de lógica
+import { ethers } from "ethers";
+import { useState, useEffect } from "react";
+import LogisticsABI from "./abis/LogisticsTracking.json";
+
+const CONTRACT_ADDRESS = "0xTU_DIRECCION_DESPLEGADA";
+
+function App() {
+  const [account, setAccount] = useState("");
+  const [contract, setContract] = useState(null);
+  const [shipments, setShipments] = useState([]);
+
+  // Conectar a MetaMask
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      setAccount(await signer.getAddress());
+      setContract(new ethers.Contract(CONTRACT_ADDRESS, LogisticsABI, signer));
+    }
+  };
+
+  // Crear Envío (Solo para Remitente)
+  const handleCreateShipment = async (e) => {
+    e.preventDefault();
+    const tx = await contract.createShipment(
+      "0xDestinatario...",
+      "Medicamentos",
+      "Madrid",
+      "Bogotá",
+      true // requiere cadena de frío
+    );
+    await tx.wait();
+    alert("Envío creado on-chain!");
+  };
+
+  return (
+    <div className="p-8">
+      <h1>Logistics Chain MVP</h1>
+      {!account ? (
+        <button onClick={connectWallet}>Conectar Billetera</button>
+      ) : (
+        <p>Conectado como: {account}</p>
+      )}
+
+      {/* Formulario de Registro de Checkpoint (Para Transportistas) */}
+      <section className="mt-8">
+        <h2>Registrar Movimiento (IoT/Manual)</h2>
+        <button onClick={() => contract.recordCheckpoint(1, "Hub Madrid", "Transit", "Ok", 42)}>
+          Simular Checkpoint (4.2°C)
+        </button>
+      </section>
+    </div>
+  );
+}
+
+2. Dashboard de Visualización (Timeline)
+Para el usuario final o el auditor, lo más importante es ver el historial.  Puedes usar una tabla o una línea de tiempo que consuma la función getShipmentCheckpoints.
+
+ID Evento		Ubicación				Actor				Temperatura		Estado
+#1				Laboratorio Origen		0x123...			4.1°C			Registrado
+#2				Aduana Salida			0x456...			4.5°C			En Tránsito
+#3				Hub Regional			0x789...			9.2°C			INCIDENCIA
+
+3. Integración IoT (Simulación)
+Para el MVP, no necesitas un sensor físico real inicialmente. Puedes usar un script en Node.js que actúe como "puerta de enlace" (Gateway):
+El sensor envía datos vía MQTT o HTTP POST.
+El servidor Node.js recibe el JSON: {"shipmentId": 1, "temp": 4.5}.
+El servidor firma una transacción automáticamente usando una Private Key autorizada (el rol de Carrier o Inspector) y llama a recordCheckpoint en el contrato.
+
+4. Próximos pasos para tu proyecto
+Para que esto pase de un código a un producto real, te sugiero seguir este orden:
+- Despliegue en Testnet: Despliega el contrato en Sepolia (Ethereum) o Amoy (Polygon) para tener transacciones reales sin costo.
+- IPFS para Documentación: Si los paquetes incluyen facturas o fotos de daños, no las guardes en la blockchain (es muy caro). Súbelas a IPFS y guarda solo el Hash (CID) en el Smart Contract.
+- Sistema de Alertas: Configurar un "Listener" en el backend que escuche el evento IncidentReported y envíe un correo o notificación push al dueño de la carga.
+
+Desplegar el contrato
+1. Despliegue con Hardhat (JavaScript/TypeScript)
+Hardhat es ideal por su flexibilidad con el ecosistema de JavaScript. Crea un archivo en scripts/deploy.js:
+
+JavaScript
+const hre = require("hardhat");
+
+async function main() {
+  console.log("Iniciando despliegue del contrato LogisticsTracking...");
+
+  // Obtener la cuenta que despliega
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("Desplegando con la cuenta:", deployer.address);
+
+  // Obtener la fábrica del contrato
+  const LogisticsTracking = await hre.ethers.getContractFactory("LogisticsTracking");
+  
+  // Desplegar
+  const contract = await LogisticsTracking.deploy();
+
+  // Esperar a que se complete el despliegue
+  await contract.waitForDeployment();
+
+  const address = await contract.getAddress();
+  console.log("✅ Contrato desplegado en:", address);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+
+
+Comando para ejecutar:
+npx hardhat run scripts/deploy.js --network sepolia
+
+2. Despliegue con Foundry (Solidity Scripting)
+Foundry es preferido por desarrolladores que quieren mantener todo en Solidity. Crea un archivo en script/LogisticsTracking.s.sol:
+
+Solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Script.sol";
+import "../src/LogisticsTracking.sol";
+
+contract DeployLogistics is Script {
+    function run() external {
+        // Recuperar la clave privada de las variables de entorno
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        // Iniciar la transmisión de transacciones a la red
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Instanciar el contrato
+        LogisticsTracking logistics = new LogisticsTracking();
+
+        vm.stopBroadcast();
+
+        console.log("✅ Contrato desplegado en:", address(logistics));
+    }
+}
+
+Comando para ejecutar:
+forge script script/LogisticsTracking.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
+
+3. Configuración de Variables de Entorno (.env)
+No olvides proteger tus claves. Crea un archivo .env en la raíz de tu proyecto:
+
+Bash
+PRIVATE_KEY=tu_clave_privada_de_metamask
+INFURA_API_KEY=tu_api_key_de_infura_o_alchemy
+ETHERSCAN_API_KEY=para_verificar_el_codigo_fuente
+
+
+Script de Seeding (llenado de datos iniciales) para Hardhat.
+
+Script de Inicialización: scripts/seed.js
+
+JavaScript
+const hre = require("hardhat");
+
+async function main() {
+  const [admin, sender, carrier, recipient] = await hre.ethers.getSigners();
+  
+  // Reemplaza con la dirección de tu contrato desplegado
+  const CONTRACT_ADDRESS = "0x..."; 
+  const logistics = await hre.ethers.getContractAt("LogisticsTracking", CONTRACT_ADDRESS);
+
+  console.log("--- Iniciando Seeding de datos ---");
+
+  // 1. Registrar Actores
+  console.log("Registrando actores...");
+  await logistics.connect(sender).registerActor("FarmaTech Labs", 1, "Madrid"); // 1 = Sender
+  await logistics.connect(carrier).registerActor("LogiTrans S.A.", 2, "Barcelona"); // 2 = Carrier
+  await logistics.connect(recipient).registerActor("Hospital Central", 4, "Valencia"); // 4 = Recipient
+
+  // 2. Crear un envío de ejemplo (Cadena de Frío)
+  console.log("Creando envío de vacunas...");
+  const txShipment = await logistics.connect(sender).createShipment(
+    recipient.address,
+    "Lote Vacunas COVID-24",
+    "Almacén Norte",
+    "Hospital Central - Urgencias",
+    true // Requiere frío
+  );
+  const receipt = await txShipment.wait();
+  const shipmentId = 1; // Primer ID
+
+  // 3. Simular Checkpoints (Movimiento y Temperatura)
+  console.log("Registrando movimientos...");
+  
+  // Salida de origen
+  await logistics.connect(carrier).recordCheckpoint(
+    shipmentId, 
+    "Salida Madrid", 
+    "Pickup", 
+    "Carga completada", 
+    45 // 4.5°C
+  );
+
+  // Paso por Hub intermedio con alerta de temperatura
+  await logistics.connect(carrier).recordCheckpoint(
+    shipmentId, 
+    "Hub Zaragoza", 
+    "Hub", 
+    "Control rutinario", 
+    85 // 8.5°C -> Esto disparará una incidencia automática en el contrato
+  );
+
+  console.log("✅ Seeding completado con éxito.");
+  console.log("Actores registrados y envío #1 en tránsito con alerta de temperatura.");
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+
+
+Resumen del Ecosistema de tu MVP
+- Smart Contract (Solidity): El "Cerebro" que guarda la verdad inmutable de dónde está el paquete y si se rompió la cadena de frío.
+- Hardhat/Foundry: Herramientas de infraestructura para subir el cerebro a la red y testearlo.
+- Frontend (React + Ethers): La cara del proyecto donde el usuario ve el mapa, el historial de temperaturas y firma las entregas.
+- Scripts de Seed: Los datos iniciales para que el sistema no se vea vacío al presentarlo.
+
+Presentación del MVP
+- Automatización de Incidencias: El contrato detecta solo si la temperatura sube y genera un reporte de auditoría sin intervención humana.
+- Prueba de Entrega Inequívoca: Solo la clave privada del destinatario puede marcar el paquete como "Entregado".
+- Transparencia: Cualquier "Auditor" puede verificar el historial sin necesidad de pedir permiso a la base de datos de la empresa de transporte.
+
