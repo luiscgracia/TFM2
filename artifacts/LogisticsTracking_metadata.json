@@ -456,6 +456,123 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "_checkpointId",
+						"type": "uint256"
+					}
+				],
+				"name": "getCheckpoint",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "shipmentId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "actor",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "location",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "checkpointType",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "notes",
+								"type": "string"
+							},
+							{
+								"internalType": "int256",
+								"name": "temperature",
+								"type": "int256"
+							}
+						],
+						"internalType": "struct LogisticsTracking.Checkpoint",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_incidentId",
+						"type": "uint256"
+					}
+				],
+				"name": "getIncident",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "shipmentId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "enum LogisticsTracking.IncidentType",
+								"name": "incidentType",
+								"type": "uint8"
+							},
+							{
+								"internalType": "address",
+								"name": "reporter",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "resolved",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct LogisticsTracking.Incident",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
 						"name": "_id",
 						"type": "uint256"
 					}
@@ -598,6 +715,62 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "_shipmentId",
+						"type": "uint256"
+					}
+				],
+				"name": "getShipmentIncidents",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "shipmentId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "enum LogisticsTracking.IncidentType",
+								"name": "incidentType",
+								"type": "uint8"
+							},
+							{
+								"internalType": "address",
+								"name": "reporter",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "resolved",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct LogisticsTracking.Incident[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
 					}
@@ -637,6 +810,25 @@
 					{
 						"internalType": "bool",
 						"name": "resolved",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "incidentId",
+						"type": "uint256"
+					}
+				],
+				"name": "isIncidentResolved",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
 						"type": "bool"
 					}
 				],
@@ -911,18 +1103,18 @@
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
-			"enabled": false,
+			"enabled": true,
 			"runs": 200
 		},
 		"remappings": []
 	},
 	"sources": {
 		"src/LogisticsTracking.sol": {
-			"keccak256": "0xc1a0643e79a12c8ab643ae14be27c36eebe20f1b3f2a5887ef0d658753908c62",
+			"keccak256": "0x5421cc2f16457c98a2a8befcc02a8ab7bc85855790ee3c1e9f7ea04230963350",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://e380abbc7deb4b6fc502f1233cb7540a72b8719bf166c30703581ed65d7de314",
-				"dweb:/ipfs/QmTKgepUN767xRpMnQ5GBAFBJUhErJFk1Pz2sVEyWob9AA"
+				"bzz-raw://756ab8e10e5dae0d86ccd147f8ca3b969ded5ade586ee1c0a6a95ae6b7f97ac1",
+				"dweb:/ipfs/QmQoRiMqBXZvecgGCTkwGfrTnFruVoigZdjvfbQ4SnSL5Z"
 			]
 		}
 	},

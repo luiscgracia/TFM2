@@ -172,19 +172,19 @@ contract LogisticsTrackingTest is Test {
 
     // Tests de creación de envíos
     function testCreateShipment() public { }
-    function testCreateShipmentWithColdChain() public { }
-    function testShipmentIdIncrementation() public { }
-    function testGetShipment() public { }
+	function testCreateShipmentWithColdChain() public { }
+	function testShipmentIdIncrementation() public { }
+	function testGetShipment() public { }
     function testOnlySenderCanCreateShipment() public { }
 
     // Tests de checkpoints
     function testRecordPickupCheckpoint() public { }
-    function testRecordHubCheckpoint() public { }
-    function testRecordTransitCheckpoint() public { }
-    function testRecordDeliveryCheckpoint() public { }
+	function testRecordHubCheckpoint() public { }
+	function testRecordTransitCheckpoint() public { }
+	function testRecordDeliveryCheckpoint() public { }
     function testRecordCheckpointWithTemperature() public { }
-    function testGetShipmentCheckpoints() public { }
-    function testCheckpointTimeline() public { }
+	function testGetShipmentCheckpoints() public { }
+	function testCheckpointTimeline() public { }
 
     // Tests de actualización de estado
     function testUpdateStatusToInTransit() public { }
@@ -196,8 +196,8 @@ contract LogisticsTrackingTest is Test {
     // Tests de confirmación de entrega
     function testConfirmDeliveryByRecipient() public { }
     function testOnlyRecipientCanConfirmDelivery() public { }
-    function testDeliveryUpdatesTimestamp() public { }
-    function testCannotConfirmDeliveryTwice() public { }
+	function testDeliveryUpdatesTimestamp() public { }
+	function testCannotConfirmDeliveryTwice() public { }
 
     // Tests de incidencias
     function testReportDelayIncident() public { }
@@ -215,8 +215,8 @@ contract LogisticsTrackingTest is Test {
 
     // Tests de cancelación
     function testCancelShipment() public { }
-    function testOnlySenderCanCancelShipment() public { }
-    function testCannotCancelDeliveredShipment() public { }
+	function testOnlySenderCanCancelShipment() public { }
+	function testCannotCancelDeliveredShipment() public { }
 
     // Tests de validaciones
     function testCannotRecordCheckpointForNonExistentShipment() public { }
@@ -229,9 +229,9 @@ contract LogisticsTrackingTest is Test {
     function testEmptyCheckpointNotes() public { }
 
     // Tests de flujo completo
-    function testCompleteShippingFlow() public { }
+	function testCompleteShippingFlow() public { }
     function testPharmaceuticalColdChainFlow() public { }
-    function testMultiHubLogisticsFlow() public { }
+	function testMultiHubLogisticsFlow() public { }
 }
 
 5.4. Arquitectura Recomendada
@@ -803,4 +803,17 @@ Presentación del MVP
 - Automatización de Incidencias: El contrato detecta solo si la temperatura sube y genera un reporte de auditoría sin intervención humana.
 - Prueba de Entrega Inequívoca: Solo la clave privada del destinatario puede marcar el paquete como "Entregado".
 - Transparencia: Cualquier "Auditor" puede verificar el historial sin necesidad de pedir permiso a la base de datos de la empresa de transporte.
+
+
+
+
+
+
+
+
+
+
+
+
+
 

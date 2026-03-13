@@ -595,6 +595,69 @@
 			},
 			{
 				"inputs": [],
+				"name": "testCancelShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testCannotCancelDeliveredShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testCannotConfirmDeliveryTwice",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testCannotRecordCheckpointForNonExistentShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testCannotReportIncidentForNonExistentShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testCheckpointTimeline",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testColdChainMonitoring",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testCompleteShippingFlow",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testConfirmDeliveryByRecipient",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "testCreateShipment",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -602,7 +665,105 @@
 			},
 			{
 				"inputs": [],
-				"name": "testFailOnlySenderCanCreate",
+				"name": "testCreateShipmentWithColdChain",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testDeactivateActor",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testDeliveryUpdatesTimestamp",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testEmptyCheckpointNotes",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testGetCheckpointData",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testGetShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testGetShipmentCheckpoints",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testGetShipmentIncidents",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testInactiveActorCannotRecordCheckpoint",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testMultiHubLogisticsFlow",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testMultipleCheckpointsForSameShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testOnlyRecipientCanConfirmDelivery",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testOnlySenderCanCancelShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testOnlySenderCanCreateShipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testPharmaceuticalColdChainFlow",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -610,6 +771,132 @@
 			{
 				"inputs": [],
 				"name": "testRecordCheckpointWithTemperature",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRecordDeliveryCheckpoint",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRecordHubCheckpoint",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRecordPickupCheckpoint",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRecordTransitCheckpoint",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRegisterCarrier",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRegisterHub",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRegisterRecipient",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testRegisterSender",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testReportDamageIncident",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testReportDelayIncident",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testReportLostIncident",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testReportTempViolation",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testResolveIncident",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testShipmentIdIncrementation",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testShipmentWithMultipleIncidents",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testUnresolvedIncidentsList",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testVerifyTemperatureComplianceValid",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "testVerifyTemperatureComplianceViolation",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -647,6 +934,33 @@
 				},
 				"targetSenders()": {
 					"details": "Returns sender allowlist configured via `targetSender` (empty means no sender allowlist)."
+				},
+				"testColdChainMonitoring()": {
+					"details": "Simula una monitorización activa donde la temperatura es correcta al inicio pero sufre una desviación crítica en un punto intermedio."
+				},
+				"testCompleteShippingFlow()": {
+					"details": "Test de Integración: Simula el ciclo de vida completo de un envío. Flujo: Registro -> Creación -> Recogida -> Hub -> Reparto -> Entrega."
+				},
+				"testEmptyCheckpointNotes()": {
+					"details": "Verifica que el contrato acepte notas vacías. (a veces el sensor IoT no envía comentarios, solo datos)."
+				},
+				"testGetCheckpointData()": {
+					"details": "Verifica que los datos almacenados en un checkpoint sean exactos. Valida la correspondencia entre los argumentos de entrada y la estructura almacenada."
+				},
+				"testMultiHubLogisticsFlow()": {
+					"details": "Simula un envío que pasa por múltiples Hubs logísticos. Verifica la acumulación de datos y el cambio de actores en una ruta compleja."
+				},
+				"testMultipleCheckpointsForSameShipment()": {
+					"details": "Verifica que un envío pueda acumular múltiples movimientos sin errores. Esto valida el crecimiento dinámico del array de checkpoints."
+				},
+				"testReportTempViolation()": {
+					"details": "Verifica que el contrato genere una incidencia AUTOMÁTICA si la temperatura es inválida Rango permitido en contrato: 2.0°C a 8.0°C (20 a 80)"
+				},
+				"testShipmentWithMultipleIncidents()": {
+					"details": "Valida que un envío pueda registrar varias incidencias simultáneas (p.ej. un retraso que luego deriva en un daño)."
+				},
+				"testVerifyTemperatureComplianceValid()": {
+					"details": "Verifica que un envío con múltiples checkpoints dentro del rango de temperatura sea marcado como conforme (Valid)."
 				}
 			},
 			"version": 1
@@ -667,7 +981,7 @@
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
-			"enabled": false,
+			"enabled": true,
 			"runs": 200
 		},
 		"remappings": []
@@ -826,19 +1140,19 @@
 			]
 		},
 		"src/LogisticsTracking.sol": {
-			"keccak256": "0xc1a0643e79a12c8ab643ae14be27c36eebe20f1b3f2a5887ef0d658753908c62",
+			"keccak256": "0x5421cc2f16457c98a2a8befcc02a8ab7bc85855790ee3c1e9f7ea04230963350",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://e380abbc7deb4b6fc502f1233cb7540a72b8719bf166c30703581ed65d7de314",
-				"dweb:/ipfs/QmTKgepUN767xRpMnQ5GBAFBJUhErJFk1Pz2sVEyWob9AA"
+				"bzz-raw://756ab8e10e5dae0d86ccd147f8ca3b969ded5ade586ee1c0a6a95ae6b7f97ac1",
+				"dweb:/ipfs/QmQoRiMqBXZvecgGCTkwGfrTnFruVoigZdjvfbQ4SnSL5Z"
 			]
 		},
 		"test/LogisticsTracking.t.sol": {
-			"keccak256": "0x953cd1ba4b19b425aec664a26246aa2d97b4a088e7fcf97cf57eed12f2899a45",
+			"keccak256": "0x381f4c207ee9faa3fdbf706bb45e091685788da357a96eb5e5dae04328a14dd8",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://f9b2b024f41c08aa78712f3868f47873750e5090e6f33af0ae6df1b4325a9b9d",
-				"dweb:/ipfs/QmPqefJf1DFMeWNKjria2n5nmdgD6fbPGNJCw1oW3ZSe7h"
+				"bzz-raw://0a57ce065be16b51df0b343999da9cb2003c58e51522fd10da93a75e6d3111e2",
+				"dweb:/ipfs/QmNmDFNzTPU8Nxuz25s3m97weubMU74s4ZUSa36iiH4bLp"
 			]
 		}
 	},
