@@ -1,0 +1,26 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["node_modules", "lib"]
+remappings = ["@openzeppelin/=node_modules/@openzeppelin/"]
+
+# --- OPTIMIZACIÓN DE TAMAÑO ---
+# Habilitar el optimizador es clave para bajar de los 24KB
+optimizer = true
+# Un valor bajo (200) hace que el contrato sea más pequeño al desplegarse.
+# Un valor alto (10,000+) hace que las funciones sean más baratas de ejecutar pero el contrato más grande.
+optimizer_runs = 200
+
+# --- CONFIGURACIÓN DE EVM ---
+# "shanghai" o "cancun" son estándares actuales. 
+# Asegúrate de que coincida con la red donde vas a desplegar.
+# evm_version = "shanghai"
+
+# --- CONTROL DE TESTS ---
+# Si tus tests siguen dando el aviso de tamaño, puedes ignorarlo 
+# para ejecución local, aunque no se recomienda para el contrato principal.
+ignored_error_codes = [5574] # Ignora advertencias específicas de tamaño si es necesario
+
+# --- GAS REPORT ---
+# Esto te mostrará cuánto cuesta cada función de tu contrato de logística
+gas_reports = ["LogisticsTracking"]

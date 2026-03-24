@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 1. Forzar transparencia total en las capas base */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: none !important;
+}
+
+/* 2. Normalización de Iconos (Seguro de vida) */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* 3. Animaciones para los estados de alerta */
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+.animate-alert {
+  animation: pulse-red 2s infinite;
+}
+

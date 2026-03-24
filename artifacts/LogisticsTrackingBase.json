@@ -1,0 +1,827 @@
+{
+	"deploy": {
+		"VM:-": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"main:1": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"ropsten:3": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"rinkeby:4": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"kovan:42": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"goerli:5": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"Custom": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		}
+	},
+	"data": {
+		"bytecode": {
+			"functionDebugData": {},
+			"generatedSources": [],
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"deployedBytecode": {
+			"functionDebugData": {},
+			"generatedSources": [],
+			"immutableReferences": {},
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"gasEstimates": null,
+		"methodIdentifiers": {
+			"IS_TEST()": "fa7626d4",
+			"excludeArtifacts()": "b5508aa9",
+			"excludeContracts()": "e20c9f71",
+			"excludeSelectors()": "b0464fdc",
+			"excludeSenders()": "1ed7831c",
+			"failed()": "ba414fa6",
+			"logistics()": "a85026b7",
+			"setUp()": "0a9254e4",
+			"targetArtifactSelectors()": "66d9a9a0",
+			"targetArtifacts()": "85226c81",
+			"targetContracts()": "3f7286f4",
+			"targetInterfaces()": "2ade3880",
+			"targetSelectors()": "916a17c6",
+			"targetSenders()": "3e5e3c23"
+		}
+	},
+	"abi": [
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "actorAddress",
+					"type": "address"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "name",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "enum LogisticsTracking.ActorRole",
+					"name": "role",
+					"type": "uint8"
+				}
+			],
+			"name": "ActorRegistered",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "checkpointId",
+					"type": "uint256"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "shipmentId",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "location",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "address",
+					"name": "actor",
+					"type": "address"
+				}
+			],
+			"name": "CheckpointRecorded",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "shipmentId",
+					"type": "uint256"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "recipient",
+					"type": "address"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "timestamp",
+					"type": "uint256"
+				}
+			],
+			"name": "DeliveryConfirmed",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "incidentId",
+					"type": "uint256"
+				},
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "shipmentId",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "enum LogisticsTracking.IncidentType",
+					"name": "incidentType",
+					"type": "uint8"
+				}
+			],
+			"name": "IncidentReported",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "incidentId",
+					"type": "uint256"
+				}
+			],
+			"name": "IncidentResolved",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "shipmentId",
+					"type": "uint256"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "sender",
+					"type": "address"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "recipient",
+					"type": "address"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "product",
+					"type": "string"
+				}
+			],
+			"name": "ShipmentCreated",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "shipmentId",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "enum LogisticsTracking.ShipmentStatus",
+					"name": "newStatus",
+					"type": "uint8"
+				}
+			],
+			"name": "ShipmentStatusChanged",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "",
+					"type": "string"
+				}
+			],
+			"name": "log",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "log_address",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "uint256[]",
+					"name": "val",
+					"type": "uint256[]"
+				}
+			],
+			"name": "log_array",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "int256[]",
+					"name": "val",
+					"type": "int256[]"
+				}
+			],
+			"name": "log_array",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "address[]",
+					"name": "val",
+					"type": "address[]"
+				}
+			],
+			"name": "log_array",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "bytes",
+					"name": "",
+					"type": "bytes"
+				}
+			],
+			"name": "log_bytes",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "bytes32",
+					"name": "",
+					"type": "bytes32"
+				}
+			],
+			"name": "log_bytes32",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "int256",
+					"name": "",
+					"type": "int256"
+				}
+			],
+			"name": "log_int",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "address",
+					"name": "val",
+					"type": "address"
+				}
+			],
+			"name": "log_named_address",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256[]",
+					"name": "val",
+					"type": "uint256[]"
+				}
+			],
+			"name": "log_named_array",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "int256[]",
+					"name": "val",
+					"type": "int256[]"
+				}
+			],
+			"name": "log_named_array",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "address[]",
+					"name": "val",
+					"type": "address[]"
+				}
+			],
+			"name": "log_named_array",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "bytes",
+					"name": "val",
+					"type": "bytes"
+				}
+			],
+			"name": "log_named_bytes",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "bytes32",
+					"name": "val",
+					"type": "bytes32"
+				}
+			],
+			"name": "log_named_bytes32",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "int256",
+					"name": "val",
+					"type": "int256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "decimals",
+					"type": "uint256"
+				}
+			],
+			"name": "log_named_decimal_int",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "val",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "decimals",
+					"type": "uint256"
+				}
+			],
+			"name": "log_named_decimal_uint",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "int256",
+					"name": "val",
+					"type": "int256"
+				}
+			],
+			"name": "log_named_int",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "val",
+					"type": "string"
+				}
+			],
+			"name": "log_named_string",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "key",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "val",
+					"type": "uint256"
+				}
+			],
+			"name": "log_named_uint",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "",
+					"type": "string"
+				}
+			],
+			"name": "log_string",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "log_uint",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "bytes",
+					"name": "",
+					"type": "bytes"
+				}
+			],
+			"name": "logs",
+			"type": "event"
+		},
+		{
+			"inputs": [],
+			"name": "IS_TEST",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "excludeArtifacts",
+			"outputs": [
+				{
+					"internalType": "string[]",
+					"name": "excludedArtifacts_",
+					"type": "string[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "excludeContracts",
+			"outputs": [
+				{
+					"internalType": "address[]",
+					"name": "excludedContracts_",
+					"type": "address[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "excludeSelectors",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "addr",
+							"type": "address"
+						},
+						{
+							"internalType": "bytes4[]",
+							"name": "selectors",
+							"type": "bytes4[]"
+						}
+					],
+					"internalType": "struct StdInvariant.FuzzSelector[]",
+					"name": "excludedSelectors_",
+					"type": "tuple[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "excludeSenders",
+			"outputs": [
+				{
+					"internalType": "address[]",
+					"name": "excludedSenders_",
+					"type": "address[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "failed",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "logistics",
+			"outputs": [
+				{
+					"internalType": "contract LogisticsTracking",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "setUp",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "targetArtifactSelectors",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "string",
+							"name": "artifact",
+							"type": "string"
+						},
+						{
+							"internalType": "bytes4[]",
+							"name": "selectors",
+							"type": "bytes4[]"
+						}
+					],
+					"internalType": "struct StdInvariant.FuzzArtifactSelector[]",
+					"name": "targetedArtifactSelectors_",
+					"type": "tuple[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "targetArtifacts",
+			"outputs": [
+				{
+					"internalType": "string[]",
+					"name": "targetedArtifacts_",
+					"type": "string[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "targetContracts",
+			"outputs": [
+				{
+					"internalType": "address[]",
+					"name": "targetedContracts_",
+					"type": "address[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "targetInterfaces",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "addr",
+							"type": "address"
+						},
+						{
+							"internalType": "string[]",
+							"name": "artifacts",
+							"type": "string[]"
+						}
+					],
+					"internalType": "struct StdInvariant.FuzzInterface[]",
+					"name": "targetedInterfaces_",
+					"type": "tuple[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "targetSelectors",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "addr",
+							"type": "address"
+						},
+						{
+							"internalType": "bytes4[]",
+							"name": "selectors",
+							"type": "bytes4[]"
+						}
+					],
+					"internalType": "struct StdInvariant.FuzzSelector[]",
+					"name": "targetedSelectors_",
+					"type": "tuple[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "targetSenders",
+			"outputs": [
+				{
+					"internalType": "address[]",
+					"name": "targetedSenders_",
+					"type": "address[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		}
+	]
+}
