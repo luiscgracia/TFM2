@@ -481,7 +481,7 @@ export default function App() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
-          opacity: 0.12,
+          opacity: 0.08,
           zIndex: 0,
           pointerEvents: 'none',
         }} />
