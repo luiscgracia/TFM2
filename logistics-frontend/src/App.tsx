@@ -10,6 +10,7 @@ import {
   usePublicClient,
 } from 'wagmi'
 import { CONTRACT_ADDRESS, ABI, ACTOR_ROLES } from './blockchain/config'
+import colombiaLocations from './data/colombia-locations.json'
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -23,9 +24,9 @@ const TEMPERATURE_NOT_SET = -(1n << 255n)
 const TEMP_LOW_TENTHS  = 20n   // 2.0 °C
 const TEMP_HIGH_TENTHS = 80n   // 8.0 °C
 
-const CHECKPOINT_TYPES    = ['Pickup', 'Hub', 'Transit', 'Delivery', 'Other']
-const SHIPMENT_STATUSES   = ['Creado', 'En tránsito', 'En hub', 'Para entrega', 'Entregado', 'Devuelto', 'Cancelado']
-const INCIDENT_TYPES      = ['Retraso', 'Daño', 'Pérdida', 'Temp. violación', 'No autorizado']
+const CHECKPOINT_TYPES    = ['PICKUP', 'HUB', 'TRANSIT', 'DELIVERY', 'OTHER']
+const SHIPMENT_STATUSES   = ['CREADO', 'EN TRÁNSITO', 'EN HUB', 'PARA ENTREGA', 'ENTREGADO', 'DEVUELTO', 'CANCELADO']
+const INCIDENT_TYPES      = ['RETRASO', 'DAÑO', 'PÉRDIDA', 'VIOLACIÓN TEMPERATURA', 'NO AUTORIZADO']
 
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-sky-100 text-sky-700',
@@ -343,7 +344,7 @@ function labelStyle(dark: boolean): React.CSSProperties {
   }
 }
 
-// [FIX-UI] TH/TD de tablas — gris neutro, bordes finos
+// [FIX-UI] TH/TD de tablas — gris neutro, bordes finos, cabecera sticky
 const TH_STYLE: React.CSSProperties = {
   padding: '9px 12px',
   fontSize: '11px',
@@ -353,7 +354,10 @@ const TH_STYLE: React.CSSProperties = {
   letterSpacing: '0.07em',
   borderBottom: '1px solid rgba(0,0,0,0.15)',
   borderRight: '1px solid rgba(0,0,0,0.1)',
-  backgroundColor: '#475569', // gris pizarra, no verde
+  backgroundColor: '#475569',
+  position: 'sticky',
+  top: 0,
+  zIndex: 2,
 }
 const TD_STYLE: React.CSSProperties = {
   padding: '8px 12px',
@@ -443,7 +447,7 @@ export default function App() {
   const { disconnect } = useDisconnect()
   const { toasts, push } = useToast()
   const queryClient = useQueryClient()
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>('actores')
 
   const connectWallet = () => {
@@ -481,7 +485,7 @@ export default function App() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
-          opacity: 0.08,
+          opacity: 0.04,
           zIndex: 0,
           pointerEvents: 'none',
         }} />
@@ -522,7 +526,7 @@ export default function App() {
                     onClick={connectWallet}
                     style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: '13px', fontWeight: 700, backgroundColor: 'rgb(0,255,0)', color: '#000000', padding: '6px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '4px' }}
                   >
-                    Conectar MetaMask
+                    CONECTAR METAMASK
                   </button>
                 )}
               </div>
@@ -534,7 +538,7 @@ export default function App() {
                     onClick={() => handleDisconnect()}
                     style={{ fontSize: '12px', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.18)', color: '#ffffff', padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.35)', cursor: 'pointer', textTransform: 'uppercase', lineHeight: 1.3, textAlign: 'center' }}
                   >
-                    Desconectar
+                    DESCONECTAR METAMASK
                   </button>
                 )}
               </div>
@@ -597,7 +601,7 @@ export default function App() {
           </div>
         ) : (
           <main style={{ maxWidth: '1200px', minWidth: '1100px', width: '100%', margin: '0 auto', padding: '24px 16px 100px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            {activeTab === 'actores'      && <><RolesGovernance push={push} /><ActorsList push={push} /></>}
+            {activeTab === 'actores'      && <ActorsTab push={push} />}
             {activeTab === 'envios'       && <><ShippingPanel push={push} /><ShipmentsTable /></>}
             {activeTab === 'operaciones'  && <OperationsPanel push={push} />}
             {activeTab === 'trazabilidad' && <TraceabilityPanel />}
@@ -621,9 +625,148 @@ export default function App() {
 }
 
 // ---------------------------------------------------------------------------
+// LocationSelect — Selector de departamento/municipio Colombia (DANE 2026)
+// ---------------------------------------------------------------------------
+function LocationSelect({
+  value,
+  onChange,
+  dark,
+  hasError,
+}: {
+  value: string
+  onChange: (val: string) => void
+  dark: boolean
+  hasError: boolean
+}) {
+  const departamentos = colombiaLocations.departamentos
+  const municipios    = colombiaLocations.municipios
+
+  // El valor almacenado tiene el formato "Municipio, Departamento"
+  // Extraemos el departamento seleccionado actualmente
+  const [deptoCode, setDeptoCode] = useState<string>('')
+
+  // Al montar, si ya hay un valor guardado intentamos recuperar el depto
+  useEffect(() => {
+    if (value) {
+      const parts = value.split(', ')
+      if (parts.length === 2) {
+        const deptoName = parts[1]
+        const found = departamentos.find(d => d.nombre === deptoName)
+        if (found) setDeptoCode(found.codigo)
+      }
+    }
+  }, [])
+
+  const municipiosFiltrados = deptoCode
+    ? municipios.filter(m => m.departamento === deptoCode)
+    : []
+
+  const currentMunicipio = value ? value.split(', ')[0] : ''
+
+  const handleDepto = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const code = e.target.value
+    setDeptoCode(code)
+    onChange('') // reset municipio al cambiar depto
+  }
+
+  const handleMunicipio = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const mun = e.target.value
+    if (!mun) { onChange(''); return }
+    const depto = departamentos.find(d => d.codigo === deptoCode)
+    onChange(depto ? `${mun}, ${depto.nombre}` : mun)
+  }
+
+  const selectStyle: React.CSSProperties = {
+    ...inputStyle(dark, hasError),
+    cursor: 'pointer',
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <select value={deptoCode} onChange={handleDepto} style={selectStyle}>
+        <option value="">— Departamento —</option>
+        {departamentos.map(d => (
+          <option key={d.codigo} value={d.codigo}>{d.nombre}</option>
+        ))}
+      </select>
+      <select
+        value={currentMunicipio}
+        onChange={handleMunicipio}
+        style={selectStyle}
+        disabled={!deptoCode}
+      >
+        <option value="">— Municipio —</option>
+        {municipiosFiltrados.map(m => (
+          <option key={m.codigo} value={m.nombre}>{m.nombre}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ActorsTab — coordina RolesGovernance + ActorsList compartiendo syncFromChain
+// ---------------------------------------------------------------------------
+function ActorsTab({ push }: { push: ReturnType<typeof useToast>['push'] }) {
+  const publicClient = usePublicClient()
+  const [isSyncing, setIsSyncing] = useState(false)
+  const { set } = useKnownActors()
+
+  const syncFromChain = useCallback(async () => {
+    if (!publicClient) return
+    setIsSyncing(true)
+    try {
+      const logs = await publicClient.getLogs({
+        address: CONTRACT_ADDRESS,
+        event: {
+          type: 'event',
+          name: 'ActorRegistered',
+          inputs: [
+            { type: 'address', name: 'actorAddress', indexed: true },
+            { type: 'string',  name: 'name',         indexed: false },
+            { type: 'uint8',   name: 'role',          indexed: false },
+          ],
+        },
+        fromBlock: BigInt(0),
+        toBlock: 'latest',
+      })
+      const candidates: string[] = []
+      logs.forEach((log: any) => {
+        const addr: string = log.args?.actorAddress
+        if (addr && !candidates.includes(addr)) candidates.push(addr)
+      })
+      const valid: string[] = []
+      await Promise.all(
+        candidates.map(async addr => {
+          try {
+            const actor: any = await publicClient.readContract({
+              address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getActor', args: [addr],
+            })
+            if (actor?.name) valid.push(addr)
+          } catch { /* descartada */ }
+        })
+      )
+      set(valid)
+      push(`Sincronizado: ${valid.length} actor(es) de ${candidates.length} evento(s)`, 'ok')
+    } catch (e: any) {
+      push('Error al sincronizar: ' + (e?.shortMessage ?? e?.message ?? 'desconocido'), 'err')
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [publicClient, set, push])
+
+  return (
+    <>
+      <RolesGovernance push={push} onActorRegistered={syncFromChain} />
+      <ActorsList push={push} isSyncing={isSyncing} onSync={syncFromChain} />
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // 1. Gobernanza — Registrar Actor
 // ---------------------------------------------------------------------------
-function RolesGovernance({ push }: { push: ReturnType<typeof useToast>['push'] }) {
+function RolesGovernance({ push, onActorRegistered }: { push: ReturnType<typeof useToast>['push']; onActorRegistered: () => void }) {
   const { dark } = useDark()
   const [form, setForm] = useState({ addr: '', name: '', role: 0, loc: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -671,7 +814,10 @@ function RolesGovernance({ push }: { push: ReturnType<typeof useToast>['push'] }
   }
 
   useEffect(() => {
-    if (isSuccess) setForm({ addr: '', name: '', role: 1, loc: '' })
+    if (isSuccess) {
+      setForm({ addr: '', name: '', role: 1, loc: '' })
+      onActorRegistered()
+    }
   }, [isSuccess])
 
   return (
@@ -704,7 +850,12 @@ function RolesGovernance({ push }: { push: ReturnType<typeof useToast>['push'] }
         </div>
         <div>
           <label style={labelStyle(dark)}>Ubicación</label>
-          <input placeholder="Ubicación" value={form.loc} onChange={e => setForm({ ...form, loc: e.target.value })} style={inputStyle(dark, !!errors.loc)} />
+          <LocationSelect
+            value={form.loc}
+            onChange={loc => setForm({ ...form, loc })}
+            dark={dark}
+            hasError={!!errors.loc}
+          />
           <FieldError msg={errors.loc} />
         </div>
       </div>
@@ -744,70 +895,55 @@ function useKnownActors() {
   return { addrs, set }
 }
 
-function ActorsList({ push }: { push: ReturnType<typeof useToast>['push'] }) {
+function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useToast>['push']; isSyncing: boolean; onSync: () => void }) {
   const { dark } = useDark()
-  const { addrs, set } = useKnownActors()
-  const publicClient = usePublicClient()
-  const [isSyncing, setIsSyncing] = useState(false)
+  const { addrs } = useKnownActors()
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all')
 
-  const syncFromChain = useCallback(async () => {
-    if (!publicClient) return
-    setIsSyncing(true)
-    try {
-      const logs = await publicClient.getLogs({
-        address: CONTRACT_ADDRESS,
-        event: {
-          type: 'event',
-          name: 'ActorRegistered',
-          inputs: [
-            { type: 'address', name: 'actorAddress', indexed: true },
-            { type: 'string',  name: 'name',         indexed: false },
-            { type: 'uint8',   name: 'role',          indexed: false },
-          ],
-        },
-        fromBlock: BigInt(0),
-        toBlock: 'latest',
-      })
-      const candidates: string[] = []
-      logs.forEach((log: any) => {
-        const addr: string = log.args?.actorAddress
-        if (addr && !candidates.includes(addr)) candidates.push(addr)
-      })
-      const valid: string[] = []
-      await Promise.all(
-        candidates.map(async addr => {
-          try {
-            const actor: any = await publicClient.readContract({
-              address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getActor', args: [addr],
-            })
-            if (actor?.name) valid.push(addr)
-          } catch { /* descartada */ }
-        })
-      )
-      set(valid)
-      push(`Sincronizado: ${valid.length} actor(es) de ${candidates.length} evento(s)`, 'ok')
-    } catch (e: any) {
-      push('Error al sincronizar: ' + (e?.shortMessage ?? e?.message ?? 'desconocido'), 'err')
-    } finally {
-      setIsSyncing(false)
-    }
-  }, [publicClient, set, push])
-
-  useEffect(() => { syncFromChain() }, [])
+  const btnFilter = (current: typeof filterActive, value: typeof filterActive, label: string) => (
+    <button
+      onClick={() => setFilterActive(value)}
+      className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${
+        filterActive === value
+          ? 'bg-indigo-600 text-white border-indigo-600'
+          : dark
+            ? 'bg-slate-700 text-slate-300 border-slate-600 hover:border-indigo-400'
+            : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300'
+      }`}
+    >
+      {label}
+    </button>
+  )
 
   return (
     <SectionHeader>
       <div className="border-l-4 border-indigo-500 px-6 pt-6 pb-4">
-        <h2 style={{ fontSize: '17px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: 0 }}>
-          Actores Registrados{' '}
-          <span style={{ fontSize: '13px', fontWeight: 400, color: dark ? '#64748b' : '#94a3b8', textTransform: 'none' }}>
-            ({addrs.length} dirección(es) · datos leídos on-chain en tiempo real)
-          </span>
-        </h2>
+        {/* Título + botón sync en la misma fila */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '17px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: 0 }}>
+            Actores Registrados{' '}
+            <span style={{ fontSize: '13px', fontWeight: 400, color: dark ? '#64748b' : '#94a3b8', textTransform: 'none' }}>
+              ({addrs.length} dirección(es) · datos leídos on-chain en tiempo real)
+            </span>
+          </h2>
+          <button
+            onClick={onSync}
+            disabled={isSyncing}
+            title="Lee todos los eventos ActorRegistered del contrato y actualiza la lista."
+            style={{ ...btnSecondary, opacity: isSyncing ? 0.5 : 1, flexShrink: 0 }}
+          >
+            {isSyncing ? '⏳ Sincronizando…' : '⛓ Sync desde chain'}
+          </button>
+        </div>
+        {/* Botones de filtro */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {btnFilter(filterActive, 'all',      'Todos')}
+          {btnFilter(filterActive, 'active',   '✅ Activos')}
+          {btnFilter(filterActive, 'inactive', '🚫 Inactivos')}
+        </div>
       </div>
 
       <div className="px-6 pb-6">
-        {/* [FIX-UX] Estado vacío con mensaje claro */}
         {addrs.length === 0 ? (
           <div style={{ padding: '48px 0', textAlign: 'center', color: dark ? '#475569' : '#94a3b8' }}>
             <div style={{ fontSize: '32px', marginBottom: '10px' }}>👥</div>
@@ -815,7 +951,7 @@ function ActorsList({ push }: { push: ReturnType<typeof useToast>['push'] }) {
             <p style={{ fontSize: '12px' }}>Registra un actor en el formulario de arriba o sincroniza desde la blockchain.</p>
           </div>
         ) : (
-          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '0.5px solid #e2e8f0' }}>
+          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', overflowY: 'auto', maxHeight: '420px', WebkitOverflowScrolling: 'touch', border: '0.5px solid #e2e8f0' }}>
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: '28%' }} />
@@ -825,7 +961,6 @@ function ActorsList({ push }: { push: ReturnType<typeof useToast>['push'] }) {
                 <col style={{ width: '14%' }} />
               </colgroup>
               <thead>
-                {/* [FIX-UI] Cabecera gris neutro, bordes finos */}
                 <tr>
                   {['Nombre', 'Dirección', 'Rol', 'Ubicación', 'Acción'].map(h => (
                     <th key={h} style={TH_STYLE}>{h}</th>
@@ -834,30 +969,19 @@ function ActorsList({ push }: { push: ReturnType<typeof useToast>['push'] }) {
               </thead>
               <tbody>
                 {addrs.map(a => (
-                  <ActorRow key={a} address={a as Address} push={push} />
+                  <ActorRow key={a} address={a as Address} push={push} filterActive={filterActive} />
                 ))}
               </tbody>
             </table>
           </div>
         )}
-
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-          <button
-            onClick={syncFromChain}
-            disabled={isSyncing}
-            title="Lee todos los eventos ActorRegistered del contrato y actualiza la lista."
-            style={{ ...btnSecondary, opacity: isSyncing ? 0.5 : 1 }}
-          >
-            {isSyncing ? '⏳ Sincronizando…' : '⛓ Sync desde chain'}
-          </button>
-        </div>
       </div>
     </SectionHeader>
   )
 }
 
-// [FIX-ERR] ActorRow recibe push y usa useTx correctamente para no perder errores
-function ActorRow({ address, push }: { address: Address; push: ReturnType<typeof useToast>['push'] }) {
+// ActorRow — muestra activos e inactivos, filtra según prop
+function ActorRow({ address, push, filterActive }: { address: Address; push: ReturnType<typeof useToast>['push']; filterActive: 'all' | 'active' | 'inactive' }) {
   const { dark } = useDark()
   const { data: actor, refetch }: any = useReadContract({
     address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getActor', args: [address],
@@ -890,12 +1014,25 @@ function ActorRow({ address, push }: { address: Address; push: ReturnType<typeof
   const isActive: boolean = actor.isActive
   const roleIdx = Number(actor.role)
 
+  // Aplicar filtro
+  if (filterActive === 'active'   && !isActive) return null
+  if (filterActive === 'inactive' &&  isActive) return null
+
   return (
-    <tr style={{ opacity: isActive ? 1 : 0.55 }} className={`transition-colors ${isActive ? (dark ? 'bg-slate-800' : 'bg-white') + ' hover:bg-slate-50' : (dark ? 'bg-slate-900' : 'bg-slate-50')}`}>
+    <tr style={{ opacity: isActive ? 1 : 0.6 }}
+      className={`transition-colors ${isActive
+        ? (dark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white hover:bg-slate-50')
+        : (dark ? 'bg-slate-900 hover:bg-slate-800' : 'bg-red-50 hover:bg-red-100')}`}
+    >
       <td style={TD_STYLE}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '16px' }}>{ROLE_ICONS[roleIdx] ?? '👤'}</span>
-          <span style={{ fontSize: '14px', fontWeight: 500, color: dark ? '#e2e8f0' : '#1e293b' }}>{actor.name}</span>
+          <div>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: dark ? '#e2e8f0' : '#1e293b' }}>{actor.name}</span>
+            {!isActive && (
+              <span style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Inactivo</span>
+            )}
+          </div>
         </div>
       </td>
       <td style={TD_STYLE}>
@@ -998,12 +1135,22 @@ function ShippingPanel({ push }: { push: ReturnType<typeof useToast>['push'] }) 
         </div>
         <div>
           <label style={labelStyle(dark)}>Origen</label>
-          <input placeholder="Origen" value={form.ori} onChange={e => setForm({ ...form, ori: e.target.value })} style={inputStyle(dark, !!errors.ori)} />
+          <LocationSelect
+            value={form.ori}
+            onChange={ori => setForm({ ...form, ori })}
+            dark={dark}
+            hasError={!!errors.ori}
+          />
           <FieldError msg={errors.ori} />
         </div>
         <div>
           <label style={labelStyle(dark)}>Destino</label>
-          <input placeholder="Destino" value={form.dst} onChange={e => setForm({ ...form, dst: e.target.value })} style={inputStyle(dark, !!errors.dst)} />
+          <LocationSelect
+            value={form.dst}
+            onChange={dst => setForm({ ...form, dst })}
+            dark={dark}
+            hasError={!!errors.dst}
+          />
           <FieldError msg={errors.dst} />
         </div>
       </div>
@@ -1027,6 +1174,9 @@ function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['push'] }
   const [statusForm, setStatusForm] = useState({ id: '', status: -1 })
   const [confirmId, setConfirmId] = useState('')
   const [cancelId, setCancelId] = useState('')
+  const [incForm, setIncForm] = useState({ id: '', type: -1, desc: '' })
+  const [incErrors, setIncErrors] = useState<Record<string, string>>({})
+  const [resolveForm, setResolveForm] = useState({ id: '', incIdx: '' })
   const [cpErrors, setCpErrors] = useState<Record<string, string>>({})
 
   const { write: writeOp, isPending: opPending, isSuccess: opSuccess } = useTx(push)
@@ -1040,6 +1190,8 @@ function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['push'] }
       if (lastOpRef.current === 'confirm') setConfirmId('')
       if (lastOpRef.current === 'status') setStatusForm({ id: '', status: -1 })
       if (lastOpRef.current === 'cancel') setCancelId('')
+      if (lastOpRef.current === 'incident') { setIncForm({ id: '', type: -1, desc: '' }); setIncErrors({}) }
+      if (lastOpRef.current === 'resolve') setResolveForm({ id: '', incIdx: '' })
       lastOpRef.current = null
     }
   }, [opSuccess])
@@ -1137,6 +1289,34 @@ function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['push'] }
     )
   }
 
+  const validateInc = () => {
+    const e: Record<string, string> = {}
+    if (!incForm.id || isNaN(Number(incForm.id))) e.id = 'ID numérico requerido'
+    if (incForm.type === -1) e.type = 'Seleccione un tipo'
+    if (!incForm.desc.trim()) e.desc = 'Campo requerido'
+    setIncErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  const handleIncident = async () => {
+    if (!validateInc()) return
+    const args = [BigInt(incForm.id), incForm.type, incForm.desc]
+    const ok = await simulate('reportIncident', args)
+    if (!ok) return
+    lastOpRef.current = 'incident'
+    writeOp({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'reportIncident', args })
+  }
+
+  const handleResolve = async () => {
+    if (!resolveForm.id || isNaN(Number(resolveForm.id))) return push('ID de envío requerido', 'err')
+    if (!resolveForm.incIdx || isNaN(Number(resolveForm.incIdx))) return push('Índice de incidencia requerido', 'err')
+    const args = [BigInt(resolveForm.id), BigInt(resolveForm.incIdx)]
+    const ok = await simulate('resolveIncident', args)
+    if (!ok) return
+    lastOpRef.current = 'resolve'
+    writeOp({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'resolveIncident', args })
+  }
+
   const subSectionTitle = (label: string, color = '#059669') => (
     <p style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: '14px', fontWeight: 700, color, textTransform: 'uppercase', marginBottom: '12px', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
       {label}
@@ -1163,7 +1343,12 @@ function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['push'] }
           </div>
           <div>
             <label style={labelStyle(dark)}>Ubicación actual</label>
-            <input placeholder="Ubicación Actual" value={cpForm.loc} onChange={e => setCpForm({ ...cpForm, loc: e.target.value })} style={inputStyle(dark, !!cpErrors.loc)} />
+            <LocationSelect
+              value={cpForm.loc}
+              onChange={loc => setCpForm({ ...cpForm, loc })}
+              dark={dark}
+              hasError={!!cpErrors.loc}
+            />
             <FieldError msg={cpErrors.loc} />
           </div>
           <div>
@@ -1271,7 +1456,105 @@ function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['push'] }
       </div>
 
       <hr style={{ border: 'none', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, margin: '16px 0' }} />
+
+      {/* INCIDENCIAS */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '8px' }}>
+
+        {/* Reportar Incidencia */}
+        <div>
+          {subSectionTitle('⚠️ Reportar Incidencia', '#d97706')}
+          <p style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8', marginTop: '-8px', marginBottom: '12px' }}>(Cualquier actor asignado al envío)</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
+              <label style={labelStyle(dark)}>ID Envío</label>
+              <input
+                type="number" min="1" placeholder="######"
+                value={incForm.id}
+                onChange={e => setIncForm({ ...incForm, id: e.target.value })}
+                style={inputStyle(dark, !!incErrors.id)}
+              />
+              <FieldError msg={incErrors.id} />
+            </div>
+            <div>
+              <label style={labelStyle(dark)}>Tipo de incidencia</label>
+              <select
+                value={incForm.type}
+                onChange={e => setIncForm({ ...incForm, type: Number(e.target.value) })}
+                style={inputStyle(dark, !!incErrors.type)}
+              >
+                <option value={-1} disabled>— Seleccione un tipo —</option>
+                {INCIDENT_TYPES.map((t, i) => <option key={i} value={i}>{t}</option>)}
+              </select>
+              <FieldError msg={incErrors.type} />
+            </div>
+            <div>
+              <label style={labelStyle(dark)}>Descripción</label>
+              <textarea
+                placeholder="Describa la incidencia con el mayor detalle posible…"
+                value={incForm.desc}
+                rows={3}
+                onChange={e => setIncForm({ ...incForm, desc: e.target.value })}
+                style={{ ...inputStyle(dark, !!incErrors.desc), resize: 'vertical', minHeight: '72px' }}
+              />
+              <FieldError msg={incErrors.desc} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '14px' }}>
+            <button
+              onClick={handleIncident}
+              disabled={opPending}
+              style={{ ...btnPrimary(opPending), backgroundColor: opPending ? '#fcd34d' : '#d97706' }}
+            >
+              {opPending ? '⏳ Registrando…' : '⚠️ Reportar Incidencia'}
+            </button>
+          </div>
+        </div>
+
+        {/* Resolver Incidencia */}
+        <div>
+          {subSectionTitle('✔️ Resolver Incidencia', '#0891b2')}
+          <p style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8', marginTop: '-8px', marginBottom: '12px' }}>(Solo el admin puede marcar una incidencia como resuelta)</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
+              <label style={labelStyle(dark)}>ID Envío</label>
+              <input
+                type="number" min="1" placeholder="######"
+                value={resolveForm.id}
+                onChange={e => setResolveForm({ ...resolveForm, id: e.target.value })}
+                style={inputStyle(dark)}
+              />
+            </div>
+            <div>
+              <label style={labelStyle(dark)}>Índice de incidencia</label>
+              <input
+                type="number" min="0" placeholder="0, 1, 2…"
+                value={resolveForm.incIdx}
+                onChange={e => setResolveForm({ ...resolveForm, incIdx: e.target.value })}
+                style={inputStyle(dark)}
+              />
+              <p style={{ fontSize: '11px', color: dark ? '#64748b' : '#94a3b8', marginTop: '4px' }}>
+                El índice se visualiza en la tabla de incidencias (columna #).
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '14px' }}>
+            <button
+              onClick={handleResolve}
+              disabled={opPending}
+              style={{ ...btnPrimary(opPending), backgroundColor: opPending ? '#67e8f9' : '#0891b2' }}
+            >
+              {opPending ? '⏳ Procesando…' : '✔️ Marcar Resuelta'}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <hr style={{ border: 'none', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, margin: '16px 0' }} />
       <CheckpointsTable />
+      <div style={{ marginTop: '20px' }}>
+        <IncidentsTable />
+      </div>
     </Card>
   )
 }
@@ -1319,7 +1602,7 @@ function ShipmentsTable() {
             <p style={{ fontSize: '13px' }}>No hay envíos registrados aún.</p>
           </div>
         ) : (
-          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '0.5px solid #e2e8f0' }}>
+          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', overflowY: 'auto', maxHeight: '520px', WebkitOverflowScrolling: 'touch', border: '0.5px solid #e2e8f0' }}>
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -1431,7 +1714,7 @@ function CheckpointsTable() {
             <p style={{ fontSize: '12px' }}>No hay checkpoints registrados aún.</p>
           </div>
         ) : (
-          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', border: '0.5px solid #e2e8f0' }}>
+          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', overflowY: 'auto', maxHeight: '480px', border: '0.5px solid #e2e8f0' }}>
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -1506,6 +1789,170 @@ function CheckpointRows({ shipmentId, tick }: { shipmentId: number; tick: number
           </td>
         </tr>
       ))}
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 6b. Tabla de Incidencias (dentro de Operaciones)
+// ---------------------------------------------------------------------------
+function IncidentsTable() {
+  const { dark } = useDark()
+  const { data: nextShipId, refetch: refetchShip }: any = useReadContract({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'nextShipmentId' })
+  const totalShipments = nextShipId ? Number(nextShipId) - 1 : 0
+  const [search, setSearch] = useState('')
+  const [filterResolved, setFilterResolved] = useState<'all' | 'open' | 'resolved'>('all')
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => { refetchShip(); setTick(t => t + 1) }, 3000)
+    return () => clearInterval(interval)
+  }, [refetchShip])
+
+  const btnF = (val: typeof filterResolved, label: string) => (
+    <button
+      onClick={() => setFilterResolved(val)}
+      className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${
+        filterResolved === val
+          ? 'bg-amber-600 text-white border-amber-600'
+          : dark
+            ? 'bg-slate-700 text-slate-300 border-slate-600 hover:border-amber-400'
+            : 'bg-white text-slate-500 border-slate-200 hover:border-amber-300'
+      }`}
+    >
+      {label}
+    </button>
+  )
+
+  return (
+    <div style={{ backgroundColor: dark ? '#0f172a' : '#f8fafc', borderRadius: '12px', border: `0.5px solid ${dark ? '#334155' : '#e2e8f0'}`, overflow: 'hidden' }}>
+      <div className="border-l-4 border-amber-500 px-5 pt-5 pb-3">
+        <h3 style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: '0 0 10px' }}>
+          ⚠️ Incidencias{' '}
+          <span style={{ fontSize: '12px', fontWeight: 400, color: dark ? '#64748b' : '#94a3b8', textTransform: 'none' }}>
+            (Historial de incidencias reportadas en todos los envíos)
+          </span>
+        </h3>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+          {btnF('all',      'Todas')}
+          {btnF('open',     '🔴 Abiertas')}
+          {btnF('resolved', '✅ Resueltas')}
+        </div>
+        <input
+          type="text"
+          placeholder="🔍 Filtrar por ID de envío…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className={`w-full border px-3 py-2 rounded-xl text-xs font-semibold outline-none transition-all focus:ring-2 focus:ring-amber-100 ${dark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-slate-50 border-slate-200'}`}
+        />
+      </div>
+
+      <div className="px-5 pb-5">
+        {totalShipments === 0 ? (
+          <div style={{ padding: '24px 0', textAlign: 'center', color: dark ? '#475569' : '#94a3b8' }}>
+            <p style={{ fontSize: '12px' }}>No hay incidencias registradas aún.</p>
+          </div>
+        ) : (
+          <div style={{ marginTop: '8px', borderRadius: '8px', overflowX: 'auto', overflowY: 'auto', maxHeight: '480px', border: `0.5px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'separate', borderSpacing: 0 }}>
+              <thead>
+                <tr>
+                  {['#', 'Envío', 'Tipo', 'Descripción', 'Reporter', 'Fecha', 'Estado'].map(h => (
+                    <th key={h} style={TH_STYLE}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: totalShipments }, (_, i) => i + 1)
+                  .filter(id => !search || String(id).includes(search.trim()))
+                  .map(shipId => (
+                    <IncidentRows key={shipId} shipmentId={shipId} tick={tick} filterResolved={filterResolved} />
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function IncidentRows({ shipmentId, tick, filterResolved }: { shipmentId: number; tick: number; filterResolved: 'all' | 'open' | 'resolved' }) {
+  const { dark } = useDark()
+  const { data: incs, refetch }: any = useReadContract({
+    address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getShipmentIncidents',
+    args: [BigInt(shipmentId), BigInt(0), BigInt(50)],
+  })
+
+  useEffect(() => { refetch() }, [tick])
+
+  if (!incs) {
+    return (
+      <tr>
+        {[...Array(7)].map((_, i) => (
+          <td key={i} style={TD_STYLE}><div className="h-3 bg-slate-100 rounded w-14 animate-pulse" /></td>
+        ))}
+      </tr>
+    )
+  }
+
+  if (incs.length === 0) return null
+
+  const filtered = incs.filter((inc: any) => {
+    if (filterResolved === 'open')     return !inc.resolved
+    if (filterResolved === 'resolved') return  inc.resolved
+    return true
+  })
+
+  if (filtered.length === 0) return null
+
+  return (
+    <>
+      {filtered.map((inc: any, i: number) => {
+        const globalIdx = incs.indexOf(inc)
+        const isResolved: boolean = inc.resolved
+        return (
+          <tr key={i}
+            style={{ backgroundColor: isResolved
+              ? (dark ? '#052e16' : '#f0fdf4')
+              : (dark ? '#2d1a0e' : '#fff7ed')
+            }}
+          >
+            <td style={TD_STYLE}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', backgroundColor: dark ? '#1e293b' : '#f1f5f9', padding: '2px 6px', borderRadius: '5px' }}>
+                {globalIdx}
+              </span>
+            </td>
+            <td style={TD_STYLE}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', backgroundColor: dark ? '#1e293b' : '#f1f5f9', padding: '2px 7px', borderRadius: '6px' }}>
+                #{shipmentId}
+              </span>
+            </td>
+            <td style={TD_STYLE}>
+              <span className="text-xs font-semibold px-2 py-1 rounded-md uppercase bg-red-50 text-red-600 border border-red-200">
+                {INCIDENT_TYPES[Number(inc.incidentType)] ?? '—'}
+              </span>
+            </td>
+            <td style={{ ...TD_STYLE, minWidth: '200px', whiteSpace: 'normal' }}>
+              <span style={{ fontSize: '12px', color: dark ? '#cbd5e1' : '#475569' }}>{inc.description}</span>
+            </td>
+            <td style={TD_STYLE}>
+              <code style={{ fontSize: '11px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', backgroundColor: dark ? '#1e293b' : '#f8fafc', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, padding: '2px 6px', borderRadius: '5px' }}>
+                {shortAddr(inc.reporter)}
+              </code>
+            </td>
+            <td style={TD_STYLE}>
+              <span style={{ fontSize: '11px', color: dark ? '#64748b' : '#94a3b8', fontWeight: 500 }}>{fmtTs(inc.timestamp)}</span>
+            </td>
+            <td style={{ ...TD_STYLE, textAlign: 'center' }}>
+              {isResolved
+                ? <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', backgroundColor: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0' }}>✅ Resuelta</span>
+                : <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>🔴 Abierta</span>
+              }
+            </td>
+          </tr>
+        )
+      })}
     </>
   )
 }
