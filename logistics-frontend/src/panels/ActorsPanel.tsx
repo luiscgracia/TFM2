@@ -91,6 +91,7 @@ export function ActorsTab({ push }: { push: ReturnType<typeof useToast>['push'] 
   return (
     <>
       <RolesGovernance push={push} onActorRegistered={syncFromChain} />
+      <TransferAdmin push={push} />
       <ActorsList push={push} isSyncing={isSyncing} onSync={syncFromChain} />
     </>
   )
@@ -199,6 +200,131 @@ function RolesGovernance({ push, onActorRegistered }: { push: ReturnType<typeof 
           {isPending ? '⏳ Procesando…' : 'Registrar Actor'}
         </button>
       </div>
+    </Card>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// TransferAdmin — Ceder el admin del contrato a otra address
+// ---------------------------------------------------------------------------
+function TransferAdmin({ push }: { push: ReturnType<typeof useToast>['push'] }) {
+  const { dark } = useDark()
+  const [newAdmin, setNewAdmin] = useState('')
+  const [error, setError] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
+  const { write, isPending, isSuccess } = useTx(push)
+  const publicClient = usePublicClient()
+  const { address } = useAccount()
+
+  const validate = () => {
+    if (!isValidAddress(newAdmin)) {
+      setError('Dirección inválida (debe ser 0x…40 hex)')
+      return false
+    }
+    if (newAdmin.toLowerCase() === address?.toLowerCase()) {
+      setError('La nueva dirección debe ser diferente a la tuya')
+      return false
+    }
+    setError('')
+    return true
+  }
+
+  const handleRequest = () => {
+    if (!validate()) return
+    setShowConfirm(true)
+  }
+
+  const handleConfirm = async () => {
+    setShowConfirm(false)
+    try {
+      await publicClient?.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: 'transferAdmin',
+        args: [newAdmin as Address],
+        account: address as Address,
+      })
+    } catch (e: any) {
+      push(parseContractError(e), 'err')
+      return
+    }
+    write({
+      address: CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: 'transferAdmin',
+      args: [newAdmin as Address],
+    })
+  }
+
+  useEffect(() => {
+    if (isSuccess) setNewAdmin('')
+  }, [isSuccess])
+
+  return (
+    <Card accent="red">
+      <h2 style={{ fontSize: '17px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: '0 0 4px' }}>
+        Transferir Admin{' '}
+        <span style={{ fontSize: '13px', fontWeight: 400, color: dark ? '#64748b' : '#94a3b8', textTransform: 'none' }}>
+          (Cede el control del contrato a otra dirección. Esta acción es irreversible.)
+        </span>
+      </h2>
+
+      <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'end' }}>
+        <div>
+          <label style={labelStyle(dark)}>Nueva dirección admin</label>
+          <input
+            placeholder="0x1234…abcd"
+            value={newAdmin}
+            onChange={e => { setNewAdmin(e.target.value); setError('') }}
+            style={inputStyle(dark, !!error)}
+          />
+          <FieldError msg={error} />
+        </div>
+        <button
+          onClick={handleRequest}
+          disabled={isPending}
+          style={{
+            ...btnPrimary(isPending),
+            background: isPending ? undefined : '#dc2626',
+            marginBottom: error ? '20px' : '0',
+          }}
+        >
+          {isPending ? '⏳ Procesando…' : '🔑 Transferir Admin'}
+        </button>
+      </div>
+
+      {showConfirm && (
+        <div style={{
+          marginTop: '16px',
+          padding: '16px',
+          borderRadius: '10px',
+          border: '1.5px solid #fca5a5',
+          background: dark ? '#450a0a' : '#fff1f2',
+        }}>
+          <p style={{ margin: '0 0 4px', fontWeight: 700, color: '#dc2626', fontSize: '14px' }}>
+            ⚠️ ¿Estás seguro?
+          </p>
+          <p style={{ margin: '0 0 12px', fontSize: '13px', color: dark ? '#fca5a5' : '#b91c1c' }}>
+            Perderás el acceso de admin y lo cederás a{' '}
+            <code style={{ fontFamily: 'monospace' }}>{newAdmin.slice(0, 6)}…{newAdmin.slice(-4)}</code>.
+            Esta acción no se puede deshacer.
+          </p>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleConfirm}
+              style={{ ...btnPrimary(false), background: '#dc2626' }}
+            >
+              Confirmar transferencia
+            </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              style={btnSecondary}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }

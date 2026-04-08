@@ -2,13 +2,7 @@ import { useState } from 'react'
 import { useConnect, useAccount, useDisconnect } from 'wagmi'
 import { useQueryClient } from '@tanstack/react-query'
 import { CONTRACT_ADDRESS } from './blockchain/config'
-import {
-  DarkContext,
-  useToast,
-  Toasts,
-  btnPrimary,
-  shortAddr,
-} from './shared'
+import { DarkContext, useToast, Toasts, btnPrimary, shortAddr } from './shared'
 import { ActorsTab } from './panels/ActorsPanel'
 import { ShippingPanel, ShipmentsTable } from './panels/ShipmentsPanel'
 import { OperationsPanel } from './panels/OperationsPanel'
@@ -20,7 +14,7 @@ import { TraceabilityPanel } from './panels/TraceabilityPanel'
 type TabId = 'actores' | 'envios' | 'operaciones' | 'trazabilidad'
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'actores',      label: 'Actores',      icon: '👥' },
+  { id: 'actores',      label: 'Actores',       icon: '👥' },
   { id: 'envios',       label: 'Envíos',        icon: '📦' },
   { id: 'operaciones',  label: 'Operaciones',   icon: '⚙️' },
   { id: 'trazabilidad', label: 'Trazabilidad',  icon: '🔍' },

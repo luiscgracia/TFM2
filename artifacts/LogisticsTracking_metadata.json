@@ -123,11 +123,6 @@
 				"type": "error"
 			},
 			{
-				"inputs": [],
-				"name": "PaginationOffsetOutOfBounds",
-				"type": "error"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -1241,6 +1236,19 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "_newAdmin",
+						"type": "address"
+					}
+				],
+				"name": "transferAdmin",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "uint256",
 						"name": "_shipmentId",
 						"type": "uint256"
@@ -1305,6 +1313,12 @@
 				},
 				"reportIncident(uint256,uint8,string)": {
 					"details": "[C-2] Validación de que el actor está asignado al envío."
+				},
+				"transferAdmin(address)": {
+					"details": "Transferencia inmediata: el nuevo admin queda activo en la misma tx.         Usar con precaución — preferir el flujo proposeAdmin/acceptAdmin para         transferencias a cuentas externas. Cualquier pendingAdmin previo es cancelado.",
+					"params": {
+						"_newAdmin": "Dirección que recibirá los privilegios de admin."
+					}
 				},
 				"verifyTemperatureCompliance(uint256)": {
 					"details": "[S-3] Añadido shipmentExists para evitar falsos positivos en IDs inexistentes.      [W-3] Checkpoints con TEMPERATURE_NOT_SET son ignorados en la validación."
@@ -1372,6 +1386,9 @@
 				"reportIncident(uint256,uint8,string)": {
 					"notice": "Reporta una incidencia sobre un envío."
 				},
+				"transferAdmin(address)": {
+					"notice": "Transfiere el admin directamente a _newAdmin sin requerir aceptación."
+				},
 				"verifyTemperatureCompliance(uint256)": {
 					"notice": "Verifica que todos los checkpoints con lectura de temperatura         estén dentro del rango de cadena de frío."
 				}
@@ -1396,11 +1413,11 @@
 	},
 	"sources": {
 		"src/LogisticsTracking.sol": {
-			"keccak256": "0xc6ad252dc6debca22a51be1e569baefc73b4b0299b3819161c7867071f90b14b",
+			"keccak256": "0xf2d84195461fbcf2c47b027af75b94645244b5fdfd5ca54271fc31101c20d931",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://57a85a2a7cb7f111501b9d4b76eceb7c723dbe09e1002a05a3d1d7656b2e94ff",
-				"dweb:/ipfs/QmZToRM7bksWf9XeLxeRaHxNpFu19oAeXB7XrgaXRHHgSx"
+				"bzz-raw://06141c947eda706a8b16f1d8d9587b574171be18998417db1c831430af3e85e6",
+				"dweb:/ipfs/QmcZwbkxH31LjV82jkMhHxwc8RcvcPu8J7aSy99b75KkGT"
 			]
 		}
 	},

@@ -294,6 +294,18 @@ contract LogisticsTracking {
         emit AdminTransferAccepted(msg.sender);
     }
 
+    /// @notice Transfiere el admin directamente a _newAdmin sin requerir aceptación.
+    /// @dev    Transferencia inmediata: el nuevo admin queda activo en la misma tx.
+    ///         Usar con precaución — preferir el flujo proposeAdmin/acceptAdmin para
+    ///         transferencias a cuentas externas. Cualquier pendingAdmin previo es cancelado.
+    /// @param  _newAdmin Dirección que recibirá los privilegios de admin.
+    function transferAdmin(address _newAdmin) external onlyAdmin {
+        if (_newAdmin == address(0)) revert InvalidAddress();
+        admin = _newAdmin;
+        pendingAdmin = address(0); // Cancela cualquier propuesta pendiente
+        emit AdminTransferAccepted(_newAdmin);
+    }
+
     // -------------------------------------------------------------------------
     // Gestión de actores
     // -------------------------------------------------------------------------
