@@ -44,6 +44,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
   const [cpErrors, setCpErrors] = useState<Record<string, string>>({})
   const [incForm, setIncForm] = useState({ id: '', type: -1, desc: '' })
   const [incErrors, setIncErrors] = useState<Record<string, string>>({})
+  const [sharedSearch, setSharedSearch] = useState('')
 
   const { write: writeOp, isPending: opPending, isSuccess: opSuccess } = useTx(push)
   const lastOpRef = useRef<null | 'checkpoint' | 'status' | 'confirm' | 'cancel' | 'incident' | 'resolve'>(null)
@@ -424,9 +425,9 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
       </div>
 
       <hr style={{ border: 'none', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, margin: '16px 0' }} />
-      <CheckpointsTable />
+      <CheckpointsTable sharedSearch={sharedSearch} setSharedSearch={setSharedSearch} />
       <div style={{ marginTop: '20px' }}>
-        <IncidentsTable push={push} />
+        <IncidentsTable push={push} sharedSearch={sharedSearch} setSharedSearch={setSharedSearch} />
       </div>
     </Card>
   )
@@ -435,14 +436,13 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
 // ---------------------------------------------------------------------------
 // CheckpointsTable — tabla de checkpoints dentro de Operaciones
 // ---------------------------------------------------------------------------
-function CheckpointsTable() {
+function CheckpointsTable({ sharedSearch, setSharedSearch }: { sharedSearch: string; setSharedSearch: (v: string) => void }) {
   const { dark } = useDark()
   const { data: nextShipId, refetch: refetchShip }: any = useReadContract({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'nextShipmentId' })
   const { data: nextCpId, refetch: refetchCp }: any    = useReadContract({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'nextCheckpointId' })
 
   const totalShipments = nextShipId ? Number(nextShipId) - 1 : 0
   const totalCps       = nextCpId   ? Number(nextCpId)   - 1 : 0
-  const [search, setSearch] = useState('')
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
@@ -462,8 +462,8 @@ function CheckpointsTable() {
         <input
           type="text"
           placeholder="🔍 Filtrar por ID de envío…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+          value={sharedSearch}
+          onChange={e => setSharedSearch(e.target.value)}
           className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-cyan-100 transition-all"
         />
       </div>
@@ -485,7 +485,7 @@ function CheckpointsTable() {
               </thead>
               <tbody>
                 {Array.from({ length: totalShipments }, (_, i) => i + 1)
-                  .filter(id => !search || String(id).includes(search.trim()))
+                  .filter(id => !sharedSearch || String(id) === sharedSearch.trim())
                   .map(shipId => <CheckpointRows key={shipId} shipmentId={shipId} tick={tick} />)}
               </tbody>
             </table>
@@ -555,13 +555,12 @@ function CheckpointRows({ shipmentId, tick }: { shipmentId: number; tick: number
 // ---------------------------------------------------------------------------
 // IncidentsTable — tabla de incidencias con botón Resolver
 // ---------------------------------------------------------------------------
-function IncidentsTable({ push }: { push: ReturnType<typeof useToast>['push'] }) {
+function IncidentsTable({ push, sharedSearch, setSharedSearch }: { push: ReturnType<typeof useToast>['push']; sharedSearch: string; setSharedSearch: (v: string) => void }) {
   const { dark } = useDark()
   const { data: nextShipId, refetch: refetchShip }: any = useReadContract({
     address: CONTRACT_ADDRESS, abi: ABI, functionName: 'nextShipmentId',
   })
   const totalShipments = nextShipId ? Number(nextShipId) - 1 : 0
-  const [search, setSearch]               = useState('')
   const [filterResolved, setFilterResolved] = useState<'all' | 'open' | 'resolved'>('all')
   const [tick, setTick] = useState(0)
 
@@ -572,7 +571,7 @@ function IncidentsTable({ push }: { push: ReturnType<typeof useToast>['push'] })
 
   const btnF = (val: typeof filterResolved, label: string) => (
     <button
-      onClick={() => setFilterResolved(val)}
+      onClick={() => { setFilterResolved(val); if (val === 'all') setSharedSearch('') }}
       className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${
         filterResolved === val
           ? 'bg-amber-600 text-white border-amber-600'
@@ -600,8 +599,8 @@ function IncidentsTable({ push }: { push: ReturnType<typeof useToast>['push'] })
         <input
           type="text"
           placeholder="🔍 Filtrar por ID de envío…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+          value={sharedSearch}
+          onChange={e => setSharedSearch(e.target.value)}
           className={`w-full border px-3 py-2 rounded-xl text-xs font-semibold outline-none transition-all ${dark ? 'bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-500' : 'bg-slate-50 border-slate-200'}`}
         />
       </div>
@@ -622,7 +621,7 @@ function IncidentsTable({ push }: { push: ReturnType<typeof useToast>['push'] })
               </thead>
               <tbody>
                 {Array.from({ length: totalShipments }, (_, i) => i + 1)
-                  .filter(id => !search || String(id).includes(search.trim()))
+                  .filter(id => !sharedSearch || String(id) === sharedSearch.trim())
                   .map(shipId => (
                     <IncidentRows key={shipId} shipmentId={shipId} tick={tick} filterResolved={filterResolved} push={push} />
                   ))}

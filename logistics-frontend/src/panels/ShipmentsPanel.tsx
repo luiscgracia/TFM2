@@ -138,8 +138,7 @@ export function ShipmentsTable() {
   const ids = Array.from({ length: total }, (_, i) => i + 1)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<number | 'all'>('all')
-  const filtered = ids.filter(id => !search || String(id).includes(search))
-
+  const filtered = ids.filter(id => !search || String(id) === search.trim())
   return (
     <SectionHeader>
       <div className="border-l-4 border-teal-500 px-6 pt-6 pb-4">
@@ -157,7 +156,7 @@ export function ShipmentsTable() {
             onChange={e => setSearch(e.target.value)}
             className="flex-1 min-w-[180px] bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-teal-100 transition-all"
           />
-          <button onClick={() => setFilterStatus('all')} className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${filterStatus === 'all' ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-500 border-slate-200 hover:border-teal-300'}`}>Todos</button>
+          <button onClick={() => { setFilterStatus('all'); setSearch('') }} className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${filterStatus === 'all' ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-500 border-slate-200 hover:border-teal-300'}`}>Todos</button>
           {SHIPMENT_STATUSES.map((s, i) => (
             <button key={i} onClick={() => setFilterStatus(i)} className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${filterStatus === i ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-500 border-slate-200 hover:border-teal-300'}`}>{s}</button>
           ))}
