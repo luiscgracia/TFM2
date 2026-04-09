@@ -223,8 +223,8 @@ function ShipmentRow({ id, filterStatus }: { id: number; filterStatus: number | 
       </td>
       <td style={TD_STYLE}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div><span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>De: </span><code style={{ fontSize: '12px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b' }}>{shortAddr(s.sender)}</code></div>
-          <div><span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Para: </span><code style={{ fontSize: '12px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b' }}>{s.recipient === zeroAddr ? '—' : shortAddr(s.recipient)}</code></div>
+          <div><span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>De: </span><code style={{ fontSize: '11px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', wordBreak: 'break-all' }}>{s.sender}</code></div>
+          <div><span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Para: </span><code style={{ fontSize: '11px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', wordBreak: 'break-all' }}>{s.recipient === zeroAddr ? '—' : s.recipient}</code></div>
         </div>
       </td>
       <td style={TD_STYLE}>

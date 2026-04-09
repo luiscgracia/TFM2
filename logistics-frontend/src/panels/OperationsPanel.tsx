@@ -39,6 +39,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
   const [cpForm, setCpForm] = useState({ id: '', loc: '', type: -1, notes: '', temp: '', noTemp: false })
   const [statusForm, setStatusForm] = useState({ id: '', status: -1 })
   const [confirmId, setConfirmId] = useState('')
+  const [confirmOpenIncidents, setConfirmOpenIncidents] = useState<number | null>(null)
   const [cancelId, setCancelId] = useState('')
   const [cpErrors, setCpErrors] = useState<Record<string, string>>({})
   const [incForm, setIncForm] = useState({ id: '', type: -1, desc: '' })
@@ -52,13 +53,32 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
   useEffect(() => {
     if (opSuccess) {
       if (lastOpRef.current === 'checkpoint') { setCpForm({ id: '', loc: '', type: -1, notes: '', temp: '', noTemp: false }); setCpErrors({}) }
-      if (lastOpRef.current === 'confirm') setConfirmId('')
+      if (lastOpRef.current === 'confirm') { setConfirmId(''); setConfirmOpenIncidents(null) }
       if (lastOpRef.current === 'status') setStatusForm({ id: '', status: -1 })
       if (lastOpRef.current === 'cancel') setCancelId('')
       if (lastOpRef.current === 'incident') { setIncForm({ id: '', type: -1, desc: '' }); setIncErrors({}) }
       lastOpRef.current = null
     }
   }, [opSuccess])
+
+  useEffect(() => {
+    if (!confirmId || isNaN(Number(confirmId)) || !publicClient) {
+      setConfirmOpenIncidents(null)
+      return
+    }
+    let cancelled = false
+    publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: 'getShipmentIncidents',
+      args: [BigInt(confirmId), BigInt(0), BigInt(50)],
+    }).then((incidents: any) => {
+      if (cancelled) return
+      const open = (incidents ?? []).filter((inc: any) => !inc.resolved).length
+      setConfirmOpenIncidents(open)
+    }).catch(() => { if (!cancelled) setConfirmOpenIncidents(null) })
+    return () => { cancelled = true }
+  }, [confirmId, publicClient])
 
   const simulate = async (functionName: string, args: any[]): Promise<boolean> => {
     if (!publicClient) {
@@ -131,6 +151,30 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
 
   const handleConfirm = async () => {
     if (!confirmId) return push('ID de envío requerido', 'err')
+
+    // Verificar que no haya incidentes abiertos antes de confirmar la entrega
+    if (publicClient) {
+      try {
+        const incidents: any = await publicClient.readContract({
+          address: CONTRACT_ADDRESS,
+          abi: ABI,
+          functionName: 'getShipmentIncidents',
+          args: [BigInt(confirmId), BigInt(0), BigInt(50)],
+        })
+        const openIncidents = (incidents ?? []).filter((inc: any) => !inc.resolved)
+        if (openIncidents.length > 0) {
+          push(
+            `No se puede confirmar la entrega: hay ${openIncidents.length} incidencia${openIncidents.length > 1 ? 's' : ''} abierta${openIncidents.length > 1 ? 's' : ''} sin resolver en el envío #${confirmId}.`,
+            'err'
+          )
+          return
+        }
+      } catch (e: any) {
+        push('Error al verificar incidencias del envío.', 'err')
+        return
+      }
+    }
+
     const ok = await simulate('confirmDelivery', [BigInt(confirmId)])
     if (!ok) { setConfirmId(''); return }
     lastOpRef.current = 'confirm'
@@ -283,8 +327,27 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
             <label style={{ ...labelStyle(dark), whiteSpace: 'nowrap', margin: 0 }}>ID Envío</label>
             <input type="number" min="1" placeholder="######" value={confirmId} onChange={e => setConfirmId(e.target.value)} style={{ ...inputStyle(dark), flex: '0 0 140px', width: '140px' }} />
           </div>
+          {confirmId && confirmOpenIncidents !== null && confirmOpenIncidents > 0 && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#450a0a' : '#fef2f2', border: `1px solid ${dark ? '#991b1b' : '#fecaca'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <span style={{ fontSize: '14px', flexShrink: 0 }}>🔴</span>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fca5a5' : '#dc2626', lineHeight: '1.4' }}>
+                {confirmOpenIncidents} incidencia{confirmOpenIncidents > 1 ? 's' : ''} abierta{confirmOpenIncidents > 1 ? 's' : ''} sin resolver. Debes resolverlas antes de confirmar la entrega.
+              </p>
+            </div>
+          )}
+          {confirmId && confirmOpenIncidents === 0 && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#052e16' : '#f0fdf4', border: `1px solid ${dark ? '#166534' : '#bbf7d0'}` }}>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#86efac' : '#16a34a' }}>
+                ✅ Sin incidencias abiertas — puedes confirmar la entrega.
+              </p>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-            <button onClick={handleConfirm} disabled={opPending} style={btnPrimary(opPending)}>
+            <button
+              onClick={handleConfirm}
+              disabled={opPending || (confirmOpenIncidents !== null && confirmOpenIncidents > 0)}
+              style={btnPrimary(opPending || (confirmOpenIncidents !== null && confirmOpenIncidents > 0))}
+            >
               {opPending ? '⏳ …' : 'Confirmar Entrega'}
             </button>
           </div>

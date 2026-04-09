@@ -117,17 +117,18 @@ iniciar :
 
 # 15 envios de ejemplo
 Demo15Shipments :
-	# hago el despliegue local en anvil
+	# 1. Deploy del contrato (siempre en 0x5FbDB2315678afecb367f032d93F642f64180aa3)
 	@forge script script/DeployLogistics.s.sol:DeployLogistics \
 	--rpc-url $(ANVIL_RPC) \
 	--private-key $(ANVIL_PK) \
-	--broadcast -vvvv \
+	--broadcast -vvvv
 
-	# ahora si, los 15 envios
+	# 2. Seed: registra actores y carga los 15 envios
 	forge script script/Demo15Shipments.s.sol \
-	--rpc-url http://127.0.0.1:8545 \
+	--rpc-url $(ANVIL_RPC) \
+	--private-key $(ANVIL_PK) \
 	--broadcast \
-	--private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+	--slow
 
 # --------------------------------------------------------------------------------------------------------------------------------------
 
