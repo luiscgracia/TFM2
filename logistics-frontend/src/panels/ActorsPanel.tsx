@@ -107,6 +107,7 @@ function RolesGovernance({ push, onActorRegistered }: { push: ReturnType<typeof 
   const { write, isPending, isSuccess } = useTx(push)
   const publicClient = usePublicClient()
   const { address } = useAccount()
+  const { addrs, set } = useKnownActors()
 
   const rolesFiltered = ACTOR_ROLES.slice(1)
 
@@ -137,7 +138,10 @@ function RolesGovernance({ push, onActorRegistered }: { push: ReturnType<typeof 
     const key = `actors_${CONTRACT_ADDRESS}`
     const current: string[] = JSON.parse(localStorage.getItem(key) ?? '[]')
     if (!current.includes(form.addr)) {
-      localStorage.setItem(key, JSON.stringify([...current, form.addr]))
+      const updated = [...current, form.addr]
+      localStorage.setItem(key, JSON.stringify(updated))
+      // Actualizar la tabla inmediatamente sin esperar confirmación on-chain
+      set([...addrs.filter(a => !updated.includes(a)), ...updated])
     }
     write({
       address: CONTRACT_ADDRESS,
