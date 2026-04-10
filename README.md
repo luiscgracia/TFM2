@@ -335,3 +335,5 @@ MIT — ver `SPDX-License-Identifier: MIT` en el encabezado del contrato.
 ---
 
 *LogisticsTracking v4 — Luis Carlos Gracia Puentes — TFM2 CodeCrypto — 2026*
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/luiscgracia/TFM2)
