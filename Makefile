@@ -116,7 +116,7 @@ iniciar :
 # --------------------------------------------------------------------------------------------------------------------------------------
 
 # 15 envios de ejemplo
-Demo15Shipments :
+D15 :
 	# 1. Deploy del contrato (siempre en 0x5FbDB2315678afecb367f032d93F642f64180aa3)
 	@forge script script/DeployLogistics.s.sol:DeployLogistics \
 	--rpc-url $(ANVIL_RPC) \
@@ -132,4 +132,7 @@ Demo15Shipments :
 
 # --------------------------------------------------------------------------------------------------------------------------------------
 
+# ejecutar anvil, cargar envios de prueba e iniciar interfaz gráfica
+TFM2 :
+	gnome-terminal -- bash -c "forge clean && anvil; exec bash" && gnome-terminal -- bash -c "make D15; exec bash" && gnome-terminal -- bash -c "cd logistics-frontend && npm run dev; exec bash"
 

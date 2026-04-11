@@ -322,6 +322,12 @@ anvil
 forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
 ```
 
+### Desplegar en red local (Anvil), cargar 15 envíos de ejemplo e iniciar la interfaz gráfica
+
+```bash
+make TFM2
+```
+
 ### Cobertura de tests
 
 72 tests cubren: gestión de actores, transferencia de admin, creación de envíos, checkpoints, temperatura, confirmación de entrega, incidencias, cancelación, control de acceso y flujos completos end-to-end.

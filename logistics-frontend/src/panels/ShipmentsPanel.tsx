@@ -174,10 +174,16 @@ export function ShipmentsTable() {
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'separate', borderSpacing: 0 }}>
               <thead>
                 <tr>
-                  {['ID', 'Producto', 'Remitente / Destinatario', 'Ruta', 'Estado / Fecha'].map(h => (
-                    <th key={h} style={TH_STYLE}>{h}</th>
-                  ))}
-                </tr>
+				  {[
+					{ label: 'ID',                        width: '8%'  },
+					{ label: 'Producto',                  width: '28%' },
+					{ label: 'Remitente / Destinatario',  width: '31%' },
+					{ label: 'Ruta',                      width: '19%' },
+					{ label: 'Estado / Fecha',            width: '14%' },
+				  ].map(h => (
+				  <th key={h.label} style={{ ...TH_STYLE, width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
+				  ))}
+				</tr>
               </thead>
               <tbody>
                 {filtered.map(id => <ShipmentRow key={id} id={id} filterStatus={filterStatus} />)}
@@ -213,29 +219,35 @@ function ShipmentRow({ id, filterStatus }: { id: number; filterStatus: number | 
 
   return (
     <tr className={`transition-colors ${dark ? 'hover:bg-slate-700' : 'bg-white hover:bg-slate-50'}`}>
-      <td style={TD_STYLE}>
+	  <td style={{ ...TD_STYLE, maxWidth: '40px', width: '40px' }}>
         <span style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '6px' }}>#{String(s.id)}</span>
         {s.requiresColdChain && <div style={{ marginTop: '4px' }}><span style={{ fontSize: '11px', fontWeight: 600, color: '#3b82f6', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: '5px' }}>❄ Frío</span></div>}
       </td>
-      <td style={TD_STYLE}>
-        <div style={{ fontSize: '13px', fontWeight: 500, color: dark ? '#e2e8f0' : '#1e293b', wordBreak: 'break-word', whiteSpace: 'normal' }}>{s.product}</div>
+	  <td style={{ ...TD_STYLE, maxWidth: '190px', width: '190px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 500, color: dark ? '#e2e8f0' : '#1e293b', wordBreak: 'break-word', whiteSpace: 'normal' }}>{s.product}</div>
       </td>
-      <td style={TD_STYLE}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div><span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>De: </span><code style={{ fontSize: '11px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', wordBreak: 'break-all' }}>{s.sender}</code></div>
-          <div><span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Para: </span><code style={{ fontSize: '11px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', wordBreak: 'break-all' }}>{s.recipient === zeroAddr ? '—' : s.recipient}</code></div>
-        </div>
-      </td>
-      <td style={TD_STYLE}>
+	  <td style={{ ...TD_STYLE, maxWidth: '220px', width: '220px' }}>
+	    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+	      <div style={{ display: 'flex', flexDirection: 'column' }}>
+	        <span style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1px' }}>De:</span>
+	        <code style={{ fontSize: '13px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', wordBreak: 'break-all', whiteSpace: 'normal' }}>{s.sender}</code>
+	      </div>
+	      <div style={{ display: 'flex', flexDirection: 'column' }}>
+	        <span style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1px' }}>Para:</span>
+	        <code style={{ fontSize: '13px', fontFamily: 'monospace', color: dark ? '#94a3b8' : '#64748b', wordBreak: 'break-all', whiteSpace: 'normal' }}>{s.recipient === zeroAddr ? '—' : s.recipient}</code>
+	      </div>
+	    </div>
+	  </td>
+	  <td style={{ ...TD_STYLE, maxWidth: '120px', width: '120px' }}>
         <div style={{ fontSize: '13px', color: dark ? '#94a3b8' : '#64748b' }}>{s.origin}</div>
         <div style={{ fontSize: '13px', color: '#cbd5e1' }}>↓</div>
         <div style={{ fontSize: '13px', color: dark ? '#94a3b8' : '#64748b' }}>{s.destination}</div>
       </td>
-      <td style={TD_STYLE}>
+	  <td style={{ ...TD_STYLE, maxWidth: '65px', width: '65px' }}>
         <span className={`text-sm font-semibold px-2 py-1 rounded-lg uppercase ${STATUS_COLORS[statusIdx] ?? 'bg-slate-100 text-slate-500'}`} style={{ display: 'inline-block' }}>
           {SHIPMENT_STATUSES[statusIdx] ?? '—'}
         </span>
-        <div style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8', marginTop: '4px' }}>
+        <div style={{ fontSize: '14px', color: dark ? '#64748b' : '#94a3b8', marginTop: '4px' }}>
           {new Date(Number(s.dateCreated) * 1000).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}
         </div>
       </td>

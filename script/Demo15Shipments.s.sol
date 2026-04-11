@@ -70,17 +70,17 @@ contract Demo15Shipments is Script {
         vm.startBroadcast(ADMIN);
 
         // ── Registro de actores reales (usados en la UI) ────────────────────
-        lt.registerActor("Farmaceutica BioSalud",      LogisticsTracking.ActorRole.Sender,    "Bogota",       SENDER1);
-        lt.registerActor("Alimentos FrescoNorte",      LogisticsTracking.ActorRole.Sender,    "Medellin",     SENDER2);
-        lt.registerActor("TransFria Express",          LogisticsTracking.ActorRole.Carrier,   "Bogota",       CARRIER1);
-        lt.registerActor("Cargo Rapido SAS",           LogisticsTracking.ActorRole.Carrier,   "Cali",         CARRIER2);
-        lt.registerActor("Hub Logistico Central",      LogisticsTracking.ActorRole.Hub,       "Bucaramanga",  HUB1);
-        lt.registerActor("Clinica San Rafael",         LogisticsTracking.ActorRole.Recipient, "Cali",         RECIPIENT1);
-        lt.registerActor("Supermercado La 14",         LogisticsTracking.ActorRole.Recipient, "Pereira",      RECIPIENT2);
-        lt.registerActor("Hospital El Tunal",          LogisticsTracking.ActorRole.Recipient, "Bogota",       RECIPIENT3);
-        lt.registerActor("Restaurante Galeria",        LogisticsTracking.ActorRole.Recipient, "Barranquilla", RECIPIENT4);
-        lt.registerActor("Drogueria Popular",          LogisticsTracking.ActorRole.Recipient, "Manizales",    RECIPIENT5);
-        lt.registerActor("Inspector Sanitario INVIMA", LogisticsTracking.ActorRole.Inspector, "Bogota",       INSPECTOR1);
+        lt.registerActor("Farmaceutica BioSalud",      LogisticsTracking.ActorRole.Sender,    "Bogota",    					   SENDER1);
+        lt.registerActor("Alimentos FrescoNorte",      LogisticsTracking.ActorRole.Sender,    "Medellin",  					   SENDER2);
+        lt.registerActor("TransFria Express",          LogisticsTracking.ActorRole.Carrier,   "Bogota",    					   CARRIER1);
+        lt.registerActor("Cargo Rapido SAS",           LogisticsTracking.ActorRole.Carrier,   "Cali",      					   CARRIER2);
+        lt.registerActor("Hub Logistico Central",      LogisticsTracking.ActorRole.Hub,       "Bucaramanga",				   HUB1);
+        lt.registerActor("Clinica San Rafael",         LogisticsTracking.ActorRole.Recipient, "Cali",      					   RECIPIENT1);
+        lt.registerActor("Supermercado La 14",         LogisticsTracking.ActorRole.Recipient, "Pereira",   					   RECIPIENT2);
+        lt.registerActor("Hospital El Tunal",          LogisticsTracking.ActorRole.Recipient, "Bogota",       				   RECIPIENT3);
+        lt.registerActor("Restaurante Galeria",        LogisticsTracking.ActorRole.Recipient, "Buenaventura, Valle del Cauca", RECIPIENT4);
+        lt.registerActor("Drogueria Popular",          LogisticsTracking.ActorRole.Recipient, "Manizales", 					   RECIPIENT5);
+        lt.registerActor("Inspector Sanitario INVIMA", LogisticsTracking.ActorRole.Inspector, "Bogota",    					   INSPECTOR1);
 
         // ── Escenarios ───────────────────────────────────────────────────────
         _escenario01();
@@ -275,7 +275,7 @@ contract Demo15Shipments is Script {
     function _escenario03() internal {
         console.log("[E03] Carne fresca - multiples violaciones + Damage");
         _asSender();
-        uint256 id = lt.createShipment(RECIPIENT4, "Carne de res refrigerada (500 kg)", "Medellin", "Barranquilla", true);
+        uint256 id = lt.createShipment(RECIPIENT4, "Carne de res refrigerada (500 kg)", "Medellin, Antioquia", "Barranquilla, Atlantico", true);
 
         _assignAndCheckpoint(true, id, "Planta FrescoNorte - Medellin", LogisticsTracking.CheckpointType.Pickup,
             "Temperatura correcta al inicio.", 25);
@@ -485,7 +485,7 @@ contract Demo15Shipments is Script {
         console.log("[E12] Bebidas gaseosas - Lost + Delay");
         _asSender();
         uint256 id = lt.createShipment(RECIPIENT4,
-            "Gaseosas Postobon surtidas (600 unidades)", "Medellin", "Barranquilla", false);
+            "Gaseosas Postobon surtidas (600 unidades)", "Medellin, Antioquia", "Buenaventura, Valle del Cauca", false);
 
         _assignAndCheckpoint(true, id, "Planta Postobon Medellin", LogisticsTracking.CheckpointType.Pickup,
             "Carga completa verificada: 600 unidades.", NO_TEMP);
