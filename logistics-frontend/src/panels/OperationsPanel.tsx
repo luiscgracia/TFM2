@@ -36,15 +36,18 @@ import { LocationSelect } from './LocationSelect'
 // ---------------------------------------------------------------------------
 export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['push'] }) {
   const { dark } = useDark()
-  const [cpForm, setCpForm] = useState({ id: '', loc: '', type: -1, notes: '', temp: '', noTemp: false })
-  const [statusForm, setStatusForm] = useState({ id: '', status: -1 })
-  const [confirmId, setConfirmId] = useState('')
+  const [globalShipId, setGlobalShipId] = useState('')
+  const [globalShipStatus, setGlobalShipStatus] = useState<number | null>(null)
+  const [globalShipStatusLoading, setGlobalShipStatusLoading] = useState(false)
+  const [cpForm, setCpForm] = useState({ loc: '', type: -1, notes: '', temp: '', noTemp: false })
+  const [statusForm, setStatusForm] = useState({ status: -1 })
   const [confirmOpenIncidents, setConfirmOpenIncidents] = useState<number | null>(null)
-  const [cancelId, setCancelId] = useState('')
   const [cpErrors, setCpErrors] = useState<Record<string, string>>({})
-  const [incForm, setIncForm] = useState({ id: '', type: -1, desc: '' })
+  const [incForm, setIncForm] = useState({ type: -1, desc: '' })
   const [incErrors, setIncErrors] = useState<Record<string, string>>({})
   const [sharedSearch, setSharedSearch] = useState('')
+
+  const isDelivered = globalShipStatus === 4
 
   const { write: writeOp, isPending: opPending, isSuccess: opSuccess } = useTx(push)
   const lastOpRef = useRef<null | 'checkpoint' | 'status' | 'confirm' | 'cancel' | 'incident' | 'resolve'>(null)
@@ -53,33 +56,47 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
 
   useEffect(() => {
     if (opSuccess) {
-      if (lastOpRef.current === 'checkpoint') { setCpForm({ id: '', loc: '', type: -1, notes: '', temp: '', noTemp: false }); setCpErrors({}) }
-      if (lastOpRef.current === 'confirm') { setConfirmId(''); setConfirmOpenIncidents(null) }
-      if (lastOpRef.current === 'status') setStatusForm({ id: '', status: -1 })
-      if (lastOpRef.current === 'cancel') setCancelId('')
-      if (lastOpRef.current === 'incident') { setIncForm({ id: '', type: -1, desc: '' }); setIncErrors({}) }
+      if (lastOpRef.current === 'checkpoint') { setCpForm({ loc: '', type: -1, notes: '', temp: '', noTemp: false }); setCpErrors({}) }
+      if (lastOpRef.current === 'confirm') { setConfirmOpenIncidents(null); setGlobalShipStatus(null); setGlobalShipId('') }
+      if (lastOpRef.current === 'status') { setStatusForm({ status: -1 }); setGlobalShipStatus(null); setGlobalShipId('') }
+      if (lastOpRef.current === 'cancel') { setGlobalShipStatus(null); setGlobalShipId('') }
+      if (lastOpRef.current === 'incident') { setIncForm({ type: -1, desc: '' }); setIncErrors({}) }
       lastOpRef.current = null
     }
   }, [opSuccess])
 
   useEffect(() => {
-    if (!confirmId || isNaN(Number(confirmId)) || !publicClient) {
+    if (!globalShipId || isNaN(Number(globalShipId)) || !publicClient) {
+      setGlobalShipStatus(null)
       setConfirmOpenIncidents(null)
       return
     }
     let cancelled = false
-    publicClient.readContract({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: 'getShipmentIncidents',
-      args: [BigInt(confirmId), BigInt(0), BigInt(50)],
-    }).then((incidents: any) => {
+    setGlobalShipStatusLoading(true)
+    Promise.all([
+      publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: 'getShipment',
+        args: [BigInt(globalShipId)],
+      }),
+      publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        functionName: 'getShipmentIncidents',
+        args: [BigInt(globalShipId), BigInt(0), BigInt(50)],
+      }),
+    ]).then(([shipment, incidents]: any) => {
       if (cancelled) return
+      const status = shipment?.status !== undefined ? Number(shipment.status) : null
+      setGlobalShipStatus(status)
       const open = (incidents ?? []).filter((inc: any) => !inc.resolved).length
       setConfirmOpenIncidents(open)
-    }).catch(() => { if (!cancelled) setConfirmOpenIncidents(null) })
+    }).catch(() => {
+      if (!cancelled) { setGlobalShipStatus(null); setConfirmOpenIncidents(null) }
+    }).finally(() => { if (!cancelled) setGlobalShipStatusLoading(false) })
     return () => { cancelled = true }
-  }, [confirmId, publicClient])
+  }, [globalShipId, publicClient])
 
   const simulate = async (functionName: string, args: any[]): Promise<boolean> => {
     if (!publicClient) {
@@ -107,7 +124,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
 
   const validateCp = () => {
     const e: Record<string, string> = {}
-    if (!cpForm.id || isNaN(Number(cpForm.id))) e.id = 'ID numérico requerido'
+    if (!globalShipId || isNaN(Number(globalShipId))) e.id = 'Ingresa el ID de envío arriba'
     if (!cpForm.loc.trim()) e.loc = 'Campo requerido'
     if (cpForm.type === -1) e.type = 'Seleccione un tipo'
     if (!cpForm.notes.trim()) e.notes = 'Campo requerido'
@@ -124,7 +141,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
     const tempArg = cpForm.noTemp
       ? TEMPERATURE_NOT_SET
       : BigInt(Math.round(parseFloat(cpForm.temp) * 10))
-    const args = [BigInt(cpForm.id), cpForm.loc, cpForm.type, cpForm.notes || 'OK', tempArg]
+    const args = [BigInt(globalShipId), cpForm.loc, cpForm.type, cpForm.notes || 'OK', tempArg]
     try {
       await publicClient?.simulateContract({
         address: CONTRACT_ADDRESS, abi: ABI, functionName: 'recordCheckpoint',
@@ -139,66 +156,41 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
   }
 
   const handleStatus = async () => {
-    if (!statusForm.id) return push('ID de envío requerido', 'err')
+    if (!globalShipId) return push('ID de envío requerido', 'err')
     if (statusForm.status === -1) return push('Selecciona un estado', 'err')
-    const ok = await simulate('updateShipmentStatus', [BigInt(statusForm.id), statusForm.status])
-    if (!ok) { setStatusForm({ id: '', status: -1 }); return }
+    const ok = await simulate('updateShipmentStatus', [BigInt(globalShipId), statusForm.status])
+    if (!ok) { setStatusForm({ status: -1 }); return }
     lastOpRef.current = 'status'
     writeOp(
-      { address: CONTRACT_ADDRESS, abi: ABI, functionName: 'updateShipmentStatus', args: [BigInt(statusForm.id), statusForm.status] },
-      { onSuccess: () => setStatusForm({ id: '', status: -1 }) }
+      { address: CONTRACT_ADDRESS, abi: ABI, functionName: 'updateShipmentStatus', args: [BigInt(globalShipId), statusForm.status] },
+      { onSuccess: () => setStatusForm({ status: -1 }) }
     )
   }
 
   const handleConfirm = async () => {
-    if (!confirmId) return push('ID de envío requerido', 'err')
+    if (!globalShipId) return push('ID de envío requerido', 'err')
+    if (globalShipStatus === 4) return push(`El envío #${globalShipId} ya fue entregado.`, 'err')
+    if (globalShipStatus !== 3) return push(`Cambia primero el estado del envío #${globalShipId} a "Para entrega" antes de confirmar la entrega final.`, 'err')
+    if (confirmOpenIncidents !== null && confirmOpenIncidents > 0)
+      return push(`Hay ${confirmOpenIncidents} incidencia${confirmOpenIncidents > 1 ? 's' : ''} abierta${confirmOpenIncidents > 1 ? 's' : ''} sin resolver. Resuélvelas antes de confirmar.`, 'err')
 
-    // Verificar que no haya incidentes abiertos antes de confirmar la entrega
-    if (publicClient) {
-      try {
-        const incidents: any = await publicClient.readContract({
-          address: CONTRACT_ADDRESS,
-          abi: ABI,
-          functionName: 'getShipmentIncidents',
-          args: [BigInt(confirmId), BigInt(0), BigInt(50)],
-        })
-        const openIncidents = (incidents ?? []).filter((inc: any) => !inc.resolved)
-        if (openIncidents.length > 0) {
-          push(
-            `No se puede confirmar la entrega: hay ${openIncidents.length} incidencia${openIncidents.length > 1 ? 's' : ''} abierta${openIncidents.length > 1 ? 's' : ''} sin resolver en el envío #${confirmId}.`,
-            'err'
-          )
-          return
-        }
-      } catch (e: any) {
-        push('Error al verificar incidencias del envío.', 'err')
-        return
-      }
-    }
-
-    const ok = await simulate('confirmDelivery', [BigInt(confirmId)])
-    if (!ok) { setConfirmId(''); return }
+    const ok = await simulate('confirmDelivery', [BigInt(globalShipId)])
+    if (!ok) return
     lastOpRef.current = 'confirm'
-    writeOp(
-      { address: CONTRACT_ADDRESS, abi: ABI, functionName: 'confirmDelivery', args: [BigInt(confirmId)] },
-      { onSuccess: () => setConfirmId('') }
-    )
+    writeOp({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'confirmDelivery', args: [BigInt(globalShipId)] })
   }
 
   const handleCancel = async () => {
-    if (!cancelId) return push('ID de envío requerido', 'err')
-    const ok = await simulate('cancelShipment', [BigInt(cancelId)])
-    if (!ok) { setCancelId(''); return }
+    if (!globalShipId) return push('ID de envío requerido', 'err')
+    const ok = await simulate('cancelShipment', [BigInt(globalShipId)])
+    if (!ok) return
     lastOpRef.current = 'cancel'
-    writeOp(
-      { address: CONTRACT_ADDRESS, abi: ABI, functionName: 'cancelShipment', args: [BigInt(cancelId)] },
-      { onSuccess: () => setCancelId('') }
-    )
+    writeOp({ address: CONTRACT_ADDRESS, abi: ABI, functionName: 'cancelShipment', args: [BigInt(globalShipId)] })
   }
 
   const validateInc = () => {
     const e: Record<string, string> = {}
-    if (!incForm.id || isNaN(Number(incForm.id))) e.id = 'ID numérico requerido'
+    if (!globalShipId || isNaN(Number(globalShipId))) e.id = 'Ingresa el ID de envío arriba'
     if (incForm.type === -1) e.type = 'Seleccione un tipo'
     if (!incForm.desc.trim()) e.desc = 'Campo requerido'
     setIncErrors(e)
@@ -207,7 +199,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
 
   const handleIncident = async () => {
     if (!validateInc()) return
-    const args = [BigInt(incForm.id), incForm.type, incForm.desc]
+    const args = [BigInt(globalShipId), incForm.type, incForm.desc]
     const ok = await simulate('reportIncident', args)
     if (!ok) return
     lastOpRef.current = 'incident'
@@ -222,22 +214,52 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
 
   return (
     <Card accent="orange">
-      <h2 style={{ fontSize: '17px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: '0 0 4px' }}>
+      <h2 style={{ fontSize: '17px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: '0 0 12px' }}>
         Operaciones{' '}
         <span style={{ fontSize: '13px', fontWeight: 400, color: dark ? '#64748b' : '#94a3b8', textTransform: 'none' }}>
           (Registrar checkpoint, cambiar estado, confirmar entrega o cancelar.)
         </span>
       </h2>
 
+      {/* GLOBAL SHIPMENT ID */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px', backgroundColor: dark ? '#1e293b' : '#f1f5f9', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, marginBottom: '20px' }}>
+        <span style={{ fontSize: '13px', fontWeight: 700, color: dark ? '#94a3b8' : '#64748b', whiteSpace: 'nowrap' }}>📦 ID Envío</span>
+        <input
+          type="number" min="1" placeholder="Ingresa el ID del envío…"
+          value={globalShipId}
+          onChange={e => { setGlobalShipId(e.target.value); setGlobalShipStatus(null); setConfirmOpenIncidents(null) }}
+          style={{ ...inputStyle(dark), flex: '0 0 180px', width: '180px', margin: 0 }}
+        />
+        {globalShipStatusLoading && (
+          <span style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8' }}>⏳ Verificando…</span>
+        )}
+        {!globalShipStatusLoading && globalShipStatus !== null && (
+          <span style={{
+            fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '6px',
+            backgroundColor: isDelivered ? (dark ? '#1e3a5f' : '#eff6ff') : (dark ? '#052e16' : '#f0fdf4'),
+            color: isDelivered ? (dark ? '#93c5fd' : '#1d4ed8') : (dark ? '#86efac' : '#16a34a'),
+            border: `1px solid ${isDelivered ? (dark ? '#1d4ed8' : '#bfdbfe') : (dark ? '#166534' : '#bbf7d0')}`,
+          }}>
+            {isDelivered ? '📦 Ya entregado' : `Estado: ${globalShipStatus}`}
+          </span>
+        )}
+      </div>
+
+      {/* BLOQUEO GLOBAL — envío ya entregado */}
+      {isDelivered && (
+        <div style={{ marginBottom: '20px', padding: '12px 16px', borderRadius: '10px', backgroundColor: dark ? '#1e3a5f' : '#eff6ff', border: `1px solid ${dark ? '#1d4ed8' : '#bfdbfe'}`, display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <span style={{ fontSize: '18px', flexShrink: 0 }}>📦</span>
+          <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: dark ? '#93c5fd' : '#1d4ed8', lineHeight: '1.5' }}>
+            El envío <strong>#{globalShipId}</strong> ya fue entregado. No es posible registrar checkpoints, cambiar el estado, confirmar entrega, cancelar ni reportar incidencias sobre este envío.
+            Solo puedes consultar su trazabilidad o generar el PDF.
+          </p>
+        </div>
+      )}
+
       {/* CHECKPOINT */}
       <div className="mt-5">
         {subSectionTitle('📍 Registrar Checkpoint')}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-          <div>
-            <label style={labelStyle(dark)}>ID Envío</label>
-            <input type="number" min="1" placeholder="######" value={cpForm.id} onChange={e => setCpForm({ ...cpForm, id: e.target.value })} style={inputStyle(dark, !!cpErrors.id)} />
-            <FieldError msg={cpErrors.id} />
-          </div>
           <div>
             <label style={labelStyle(dark)}>Ubicación actual</label>
             <LocationSelect
@@ -287,7 +309,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-          <button onClick={handleCheckpoint} disabled={opPending} style={btnPrimary(opPending)}>
+          <button onClick={handleCheckpoint} disabled={opPending || isDelivered || !globalShipId} style={btnPrimary(opPending || isDelivered || !globalShipId)}>
             {opPending ? '⏳ Registrando…' : 'Registrar Checkpoint'}
           </button>
         </div>
@@ -302,10 +324,6 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
         <div style={{ paddingRight: '24px', borderRight: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
           {subSectionTitle('🔄 Cambiar Estado')}
           <p style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8', marginTop: '-8px', marginBottom: '12px' }}>(Solo carrier / hub)</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-            <label style={{ ...labelStyle(dark), whiteSpace: 'nowrap', margin: 0 }}>ID Envío</label>
-            <input type="number" min="1" placeholder="######" value={statusForm.id} onChange={e => setStatusForm({ ...statusForm, id: e.target.value })} style={{ ...inputStyle(dark), flex: 1 }} />
-          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <label style={{ ...labelStyle(dark), whiteSpace: 'nowrap', margin: 0 }}>Nuevo estado</label>
             <select value={statusForm.status} onChange={e => setStatusForm({ ...statusForm, status: Number(e.target.value) })} style={{ ...inputStyle(dark), flex: '0 1 160px', maxWidth: '160px' }}>
@@ -314,7 +332,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-            <button onClick={handleStatus} disabled={opPending} style={btnPrimary(opPending)}>
+            <button onClick={handleStatus} disabled={opPending || isDelivered || !globalShipId} style={btnPrimary(opPending || isDelivered || !globalShipId)}>
               {opPending ? '⏳ Procesando…' : 'Actualizar Estado'}
             </button>
           </div>
@@ -324,19 +342,23 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
         <div style={{ paddingLeft: '24px', paddingRight: '24px', borderRight: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
           {subSectionTitle('✅ Confirmar Entrega')}
           <p style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8', marginTop: '-8px', marginBottom: '12px' }}>(Solo recipient)</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <label style={{ ...labelStyle(dark), whiteSpace: 'nowrap', margin: 0 }}>ID Envío</label>
-            <input type="number" min="1" placeholder="######" value={confirmId} onChange={e => setConfirmId(e.target.value)} style={{ ...inputStyle(dark), flex: '0 0 140px', width: '140px' }} />
-          </div>
-          {confirmId && confirmOpenIncidents !== null && confirmOpenIncidents > 0 && (
-            <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#450a0a' : '#fef2f2', border: `1px solid ${dark ? '#991b1b' : '#fecaca'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <span style={{ fontSize: '14px', flexShrink: 0 }}>🔴</span>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fca5a5' : '#dc2626', lineHeight: '1.4' }}>
-                {confirmOpenIncidents} incidencia{confirmOpenIncidents > 1 ? 's' : ''} abierta{confirmOpenIncidents > 1 ? 's' : ''} sin resolver. Debes resolverlas antes de confirmar la entrega.
+          {globalShipId && globalShipStatus !== null && globalShipStatus !== 3 && !isDelivered && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#422006' : '#fffbeb', border: `1px solid ${dark ? '#92400e' : '#fde68a'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <span style={{ fontSize: '14px', flexShrink: 0 }}>⚠️</span>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fcd34d' : '#92400e', lineHeight: '1.4' }}>
+                El envío aún no está en estado <strong>"Para entrega"</strong>. Cambia primero el estado a <strong>"Para entrega"</strong> antes de confirmar.
               </p>
             </div>
           )}
-          {confirmId && confirmOpenIncidents === 0 && (
+          {globalShipId && globalShipStatus === 3 && confirmOpenIncidents !== null && confirmOpenIncidents > 0 && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#450a0a' : '#fef2f2', border: `1px solid ${dark ? '#991b1b' : '#fecaca'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <span style={{ fontSize: '14px', flexShrink: 0 }}>🔴</span>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fca5a5' : '#dc2626', lineHeight: '1.4' }}>
+                {confirmOpenIncidents} incidencia{confirmOpenIncidents > 1 ? 's' : ''} abierta{confirmOpenIncidents > 1 ? 's' : ''} sin resolver. Resuélvelas antes de confirmar.
+              </p>
+            </div>
+          )}
+          {globalShipId && globalShipStatus === 3 && confirmOpenIncidents === 0 && (
             <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#052e16' : '#f0fdf4', border: `1px solid ${dark ? '#166534' : '#bbf7d0'}` }}>
               <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#86efac' : '#16a34a' }}>
                 ✅ Sin incidencias abiertas — puedes confirmar la entrega.
@@ -346,8 +368,8 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
             <button
               onClick={handleConfirm}
-              disabled={opPending || (confirmOpenIncidents !== null && confirmOpenIncidents > 0)}
-              style={btnPrimary(opPending || (confirmOpenIncidents !== null && confirmOpenIncidents > 0))}
+              disabled={opPending || isDelivered || !globalShipId || globalShipStatus !== 3 || (confirmOpenIncidents !== null && confirmOpenIncidents > 0)}
+              style={btnPrimary(opPending || isDelivered || !globalShipId || globalShipStatus !== 3 || (confirmOpenIncidents !== null && confirmOpenIncidents > 0))}
             >
               {opPending ? '⏳ …' : 'Confirmar Entrega'}
             </button>
@@ -358,12 +380,8 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
         <div style={{ paddingLeft: '24px' }}>
           {subSectionTitle('❌ Cancelar Envío', '#dc2626')}
           <p style={{ fontSize: '12px', color: dark ? '#64748b' : '#94a3b8', marginTop: '-8px', marginBottom: '12px' }}>(Solo sender)</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <label style={{ ...labelStyle(dark), whiteSpace: 'nowrap', margin: 0 }}>ID Envío</label>
-            <input type="number" min="1" placeholder="######" value={cancelId} onChange={e => setCancelId(e.target.value)} style={{ ...inputStyle(dark), flex: '0 0 140px', width: '140px' }} />
-          </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-            <button onClick={handleCancel} disabled={opPending} style={btnDanger(opPending)}>
+            <button onClick={handleCancel} disabled={opPending || isDelivered || !globalShipId} style={btnDanger(opPending || isDelivered || !globalShipId)}>
               {opPending ? '⏳ …' : 'Cancelar Envío'}
             </button>
           </div>
@@ -379,16 +397,6 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
           (Cualquier actor asignado al envío puede reportar una incidencia)
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-          <div>
-            <label style={labelStyle(dark)}>ID Envío</label>
-            <input
-              type="number" min="1" placeholder="######"
-              value={incForm.id}
-              onChange={e => setIncForm({ ...incForm, id: e.target.value })}
-              style={inputStyle(dark, !!incErrors.id)}
-            />
-            <FieldError msg={incErrors.id} />
-          </div>
           <div>
             <label style={labelStyle(dark)}>Tipo de incidencia</label>
             <select
@@ -416,8 +424,8 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '14px' }}>
           <button
             onClick={handleIncident}
-            disabled={opPending}
-            style={{ ...btnPrimary(opPending), backgroundColor: opPending ? '#fcd34d' : '#d97706' }}
+            disabled={opPending || isDelivered || !globalShipId}
+            style={{ ...btnPrimary(opPending || isDelivered || !globalShipId), backgroundColor: (opPending || isDelivered || !globalShipId) ? '#fcd34d' : '#d97706' }}
           >
             {opPending ? '⏳ Registrando…' : '⚠️ Reportar Incidencia'}
           </button>
