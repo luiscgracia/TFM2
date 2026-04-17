@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.24;
 
 import {Test} from "lib/forge-std/src/Test.sol";
-import "../src/LogisticsTracking.sol";
+import {LogisticsTracking} from "../src/LogisticsTracking.sol";
 
 contract LogisticsTrackingTest is Test {
     LogisticsTracking public logistics;
@@ -31,7 +31,7 @@ contract LogisticsTrackingTest is Test {
     event IncidentReported(
         uint256 indexed incidentId, uint256 indexed shipmentId, LogisticsTracking.IncidentType incidentType
     );
-    event IncidentResolved(uint256 indexed incidentId);
+    event IncidentResolved(uint256 indexed incidentId, string resolutionNote);
     event DeliveryConfirmed(uint256 indexed shipmentId, address indexed recipient, uint256 timestamp);
     event ActorRegistered(address indexed actorAddress, string name, LogisticsTracking.ActorRole role);
 
@@ -645,7 +645,7 @@ contract LogisticsTrackingTest is Test {
         vm.prank(carrier);
         uint256 incId = logistics.reportIncident(sid, LogisticsTracking.IncidentType.Damage, "Broken");
         vm.prank(admin);
-        logistics.resolveIncident(incId);
+        logistics.resolveIncident(incId, "Paquete revisado y reemplazado por el carrier");
         assertTrue(logistics.isIncidentResolved(incId));
     }
 
@@ -693,8 +693,9 @@ contract LogisticsTrackingTest is Test {
         uint256 incId = logistics.reportIncident(sid, LogisticsTracking.IncidentType.Lost, "No aparece");
         assertFalse(logistics.getIncident(incId).resolved);
         vm.prank(admin);
-        logistics.resolveIncident(incId);
+        logistics.resolveIncident(incId, "Paquete localizado y reenviado al destinatario");
         assertTrue(logistics.getIncident(incId).resolved);
+        assertEq(logistics.getIncident(incId).resolutionNote, "Paquete localizado y reenviado al destinatario");
     }
 
     function testReportIncidentEmitsEvent() public {
@@ -717,10 +718,10 @@ contract LogisticsTrackingTest is Test {
 
         vm.prank(carrier);
         uint256 incId = logistics.reportIncident(sid, LogisticsTracking.IncidentType.Damage, "Roto");
-        vm.expectEmit(true, false, false, false);
-        emit IncidentResolved(incId);
+        vm.expectEmit(true, false, false, true);
+        emit IncidentResolved(incId, "Caja inspeccionada y reempacada correctamente");
         vm.prank(admin);
-        logistics.resolveIncident(incId);
+        logistics.resolveIncident(incId, "Caja inspeccionada y reempacada correctamente");
     }
 
     // =========================================================================
@@ -1027,7 +1028,7 @@ contract LogisticsTrackingTest is Test {
         assertFalse(logistics.isIncidentResolved(incId));
 
         vm.prank(admin);
-        logistics.resolveIncident(incId);
+        logistics.resolveIncident(incId, unicode"Caja golpeada revisada, contenido sin daño mayor");
         assertTrue(logistics.isIncidentResolved(incId));
 
         vm.prank(recipient);

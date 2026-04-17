@@ -65,9 +65,9 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
   useEffect(() => {
     if (opSuccess) {
       if (lastOpRef.current === 'checkpoint') { setCpForm({ loc: '', type: -1, notes: '', temp: '', noTemp: false }); setCpErrors({}) }
-      if (lastOpRef.current === 'confirm') { setConfirmOpenIncidents(null); setGlobalShipStatus(null); setGlobalShipId('') }
-      if (lastOpRef.current === 'status') { setStatusForm({ status: -1 }); setGlobalShipStatus(null); setGlobalShipId('') }
-      if (lastOpRef.current === 'cancel') { setGlobalShipStatus(null); setGlobalShipId('') }
+      if (lastOpRef.current === 'confirm') { setConfirmOpenIncidents(null); setGlobalShipStatus(null); setGlobalShipId(''); setSharedSearch('') }
+      if (lastOpRef.current === 'status') { setStatusForm({ status: -1 }); setGlobalShipStatus(null); setGlobalShipId(''); setSharedSearch('') }
+      if (lastOpRef.current === 'cancel') { setGlobalShipStatus(null); setGlobalShipId(''); setSharedSearch('') }
       if (lastOpRef.current === 'incident') { setIncForm({ type: -1, desc: '' }); setIncErrors({}) }
       lastOpRef.current = null
     }
@@ -245,7 +245,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
         <input
           type="number" min="1" placeholder="Ingresa el ID del envío…"
           value={globalShipId}
-          onChange={e => { setGlobalShipId(e.target.value); setGlobalShipStatus(null); setConfirmOpenIncidents(null) }}
+          onChange={e => { setGlobalShipId(e.target.value); setSharedSearch(e.target.value); setGlobalShipStatus(null); setConfirmOpenIncidents(null) }}
           style={{ ...inputStyle(dark), flex: '0 0 180px', width: '180px', margin: 0 }}
         />
         {globalShipStatusLoading && (
@@ -387,7 +387,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
             <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#422006' : '#fffbeb', border: `1px solid ${dark ? '#92400e' : '#fde68a'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               <span style={{ fontSize: '14px', flexShrink: 0 }}>⚠️</span>
               <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fcd34d' : '#92400e', lineHeight: '1.4' }}>
-                El envío aún no está en estado <strong>"Para entrega"</strong>. Cambia primero el estado a <strong>"Para entrega"</strong> antes de confirmar.
+                El envío aún no está en estado <strong>"Para entrega"</strong>. Cambie primero el estado a <strong>"Para entrega"</strong> antes de confirmar.
               </p>
             </div>
           )}
@@ -395,14 +395,14 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
             <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#450a0a' : '#fef2f2', border: `1px solid ${dark ? '#991b1b' : '#fecaca'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               <span style={{ fontSize: '14px', flexShrink: 0 }}>🔴</span>
               <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fca5a5' : '#dc2626', lineHeight: '1.4' }}>
-                {confirmOpenIncidents} incidencia{confirmOpenIncidents > 1 ? 's' : ''} abierta{confirmOpenIncidents > 1 ? 's' : ''} sin resolver. Resuélvelas antes de confirmar.
+                {confirmOpenIncidents} incidencia{confirmOpenIncidents > 1 ? 's' : ''} abierta{confirmOpenIncidents > 1 ? 's' : ''} sin resolver. Resuélvalas antes de confirmar.
               </p>
             </div>
           )}
           {globalShipId && globalShipStatus === 3 && confirmOpenIncidents === 0 && (
             <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#052e16' : '#f0fdf4', border: `1px solid ${dark ? '#166534' : '#bbf7d0'}` }}>
               <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#86efac' : '#16a34a' }}>
-                ✅ Sin incidencias abiertas — puedes confirmar la entrega.
+                ✅ Sin incidencias abiertas, puede confirmar la entrega.
               </p>
             </div>
           )}
@@ -425,7 +425,7 @@ export function OperationsPanel({ push }: { push: ReturnType<typeof useToast>['p
             <div style={{ marginBottom: '10px', padding: '8px 12px', borderRadius: '8px', backgroundColor: dark ? '#422006' : '#fffbeb', border: `1px solid ${dark ? '#92400e' : '#fde68a'}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               <span style={{ fontSize: '14px', flexShrink: 0 }}>⚠️</span>
               <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: dark ? '#fcd34d' : '#92400e', lineHeight: '1.4' }}>
-                Solo se puede cancelar un envío en estado <strong>Creado</strong> o <strong>En hub</strong>.
+                Solo se puede cancelar un envío en estado <strong>Creado</strong> o <strong>En Hub</strong>.
               </p>
             </div>
           )}
@@ -657,7 +657,7 @@ function IncidentsTable({ push, sharedSearch, setSharedSearch }: { push: ReturnT
         <h3 style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', color: dark ? '#f1f5f9' : '#1e293b', margin: '0 0 10px' }}>
           ⚠️ Incidencias{' '}
           <span style={{ fontSize: '12px', fontWeight: 400, color: dark ? '#64748b' : '#94a3b8', textTransform: 'none' }}>
-            (Historial de todas las incidencias · botón Resolver para el admin)
+            (Historial de todas las incidencias · botón Resolver para el ADMIN)
           </span>
         </h3>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -718,12 +718,24 @@ function IncidentRows({ shipmentId, tick, filterResolved, push }: {
   const { address }   = useAccount()
   const { write }     = useTx(push)
   const [resolving, setResolving] = useState<number | null>(null)
+  const [resolveModal, setResolveModal] = useState<{ incidentId: bigint; localIdx: number } | null>(null)
+  const [resolveNote, setResolveNote] = useState('')
+
+
 
   useEffect(() => { refetch() }, [tick])
 
-  const handleResolve = async (incidentId: bigint, localIdx: number) => {
+  const openResolveModal = (incidentId: bigint, localIdx: number) => {
+    setResolveNote('')
+    setResolveModal({ incidentId, localIdx })
+  }
+
+  const confirmResolve = async () => {
+    if (!resolveModal) return
+    const { incidentId, localIdx } = resolveModal
     setResolving(localIdx)
-    const args: [bigint] = [incidentId]
+    setResolveModal(null)
+    const args: [bigint, string] = [incidentId, resolveNote.trim()]
     try {
       await publicClient?.simulateContract({
         address: CONTRACT_ADDRESS, abi: ABI,
@@ -808,14 +820,55 @@ function IncidentRows({ shipmentId, tick, filterResolved, push }: {
             </td>
             <td style={{ ...TD_STYLE, textAlign: 'center' }}>
               {!isResolved && (
-                <button
-                  onClick={() => handleResolve(inc.id, idx)}
-                  disabled={isResolving}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg uppercase border transition-colors disabled:opacity-50 bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100"
-                >
-                  {isResolving ? '⏳' : '✔ Resolver'}
-                </button>
+                resolveModal?.localIdx === idx && resolveModal?.incidentId === inc.id ? (
+                  <div style={{ minWidth: '220px', padding: '8px', borderRadius: '8px', backgroundColor: dark ? '#0f172a' : '#f8fafc', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+                    <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: 700, color: dark ? '#94a3b8' : '#64748b', textTransform: 'uppercase' }}>
+                      Notas de resolución
+                    </p>
+                    <textarea
+                      autoFocus
+                      rows={3}
+                      placeholder="Describe cómo se resolvió la incidencia…"
+                      value={resolveNote}
+                      onChange={e => setResolveNote(e.target.value)}
+                      style={{ width: '100%', fontSize: '12px', padding: '6px 8px', borderRadius: '6px', border: `1px solid ${dark ? '#475569' : '#cbd5e1'}`, backgroundColor: dark ? '#1e293b' : '#fff', color: dark ? '#e2e8f0' : '#1e293b', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => setResolveModal(null)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={confirmResolve}
+                        disabled={isResolving}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg uppercase border transition-colors disabled:opacity-50 bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100"
+                      >
+                        {isResolving ? '⏳' : '✔ Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => openResolveModal(inc.id, idx)}
+                    disabled={isResolving}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg uppercase border transition-colors disabled:opacity-50 bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100"
+                  >
+                    {isResolving ? '⏳' : '✔ Resolver'}
+                  </button>
+                )
               )}
+              {isResolved && (() => {
+                const note = inc.resolutionNote as string | undefined
+                return note ? (
+                  <div style={{ maxWidth: '200px', padding: '4px 8px', borderRadius: '6px', backgroundColor: dark ? '#052e16' : '#f0fdf4', border: `1px solid ${dark ? '#166534' : '#bbf7d0'}` }}>
+                    <p style={{ margin: 0, fontSize: '11px', color: dark ? '#86efac' : '#15803d', fontStyle: 'italic', whiteSpace: 'normal', lineHeight: '1.4' }}>
+                      📋 {note}
+                    </p>
+                  </div>
+                ) : null
+              })()}
             </td>
           </tr>
         )

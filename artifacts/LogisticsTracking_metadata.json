@@ -292,6 +292,12 @@
 						"internalType": "uint256",
 						"name": "incidentId",
 						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "resolutionNote",
+						"type": "string"
 					}
 				],
 				"name": "IncidentResolved",
@@ -682,6 +688,11 @@
 								"internalType": "bool",
 								"name": "resolved",
 								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "resolutionNote",
+								"type": "string"
 							}
 						],
 						"internalType": "struct LogisticsTracking.Incident[]",
@@ -799,6 +810,11 @@
 								"internalType": "bool",
 								"name": "resolved",
 								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "resolutionNote",
+								"type": "string"
 							}
 						],
 						"internalType": "struct LogisticsTracking.Incident",
@@ -1017,6 +1033,11 @@
 								"internalType": "bool",
 								"name": "resolved",
 								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "resolutionNote",
+								"type": "string"
 							}
 						],
 						"internalType": "struct LogisticsTracking.Incident[]",
@@ -1226,6 +1247,11 @@
 						"internalType": "uint256",
 						"name": "_incidentId",
 						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "_resolutionNote",
+						"type": "string"
 					}
 				],
 				"name": "resolveIncident",
@@ -1413,11 +1439,11 @@
 	},
 	"sources": {
 		"src/LogisticsTracking.sol": {
-			"keccak256": "0xf2d84195461fbcf2c47b027af75b94645244b5fdfd5ca54271fc31101c20d931",
+			"keccak256": "0x3aaf3cf3cb7a158d50de3e40bbb7abcc87de8139dcff473dc02411fa1ca32a7f",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://06141c947eda706a8b16f1d8d9587b574171be18998417db1c831430af3e85e6",
-				"dweb:/ipfs/QmcZwbkxH31LjV82jkMhHxwc8RcvcPu8J7aSy99b75KkGT"
+				"bzz-raw://06347a01f8cebd986f4e5a768d2d6499dd9a1df3c134c594d477e4b4da2abf55",
+				"dweb:/ipfs/QmV7Na5mmuCmNtx9y1Bz1wMPQVtxMQmbLcLf5fNAmZCRpX"
 			]
 		}
 	},

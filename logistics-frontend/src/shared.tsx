@@ -129,17 +129,17 @@ export function Toasts({ toasts }: { toasts: Toast[] }) {
 // Contract error mapping
 // ---------------------------------------------------------------------------
 const CONTRACT_ERRORS: Record<string, string> = {
-  OnlyAdmin:                  'Solo el admin puede realizar esta acción.',
-  ActorInactive:              'Tu cuenta no está activa en el contrato.',
-  OnlySendersCanCreate:       'Solo actores con rol Sender pueden crear envíos.',
-  OnlyCarrierOrHub:           'Solo Carrier o Hub pueden cambiar el estado.',
+  OnlyAdmin:                  'Solo el ADMIN puede realizar esta acción.',
+  ActorInactive:              'Esta cuenta no está activa en el contrato.',
+  OnlySendersCanCreate:       'Solo actores con rol SENDER pueden crear envíos.',
+  OnlyCarrierOrHub:           'Solo actores con rol CARRIER o HUB pueden cambiar el estado.',
   OnlyRecipientCanConfirm:    'Solo el destinatario registrado puede confirmar la entrega.',
   OnlySenderCanCancel:        'Solo el remitente del envío puede cancelarlo.',
-  ActorNotAssignedToShipment: 'Tu cuenta no está asignada a este envío.',
+  ActorNotAssignedToShipment: 'Esta cuenta no está asignada a este envío.',
   AlreadyDelivered:           'Este envío ya fue confirmado como entregado.',
   AlreadyClosedShipment:      'El envío ya está en estado terminal (entregado, cancelado o devuelto).',
   CannotCancelAfterTransit:   'No se puede cancelar un envío en tránsito o en reparto.',
-  CannotSetDeliveredDirectly: 'El estado Entregado solo se puede asignar mediante Confirmar Entrega.',
+  CannotSetDeliveredDirectly: 'El estado entregado solo se puede asignar mediante Confirmar Entrega.',
   AlreadyRegisteredAndActive: 'Este actor ya está registrado y activo.',
   InvalidAddress:             'La dirección proporcionada no es válida.',
   InvalidRole:                'El rol seleccionado no es válido.',
@@ -148,7 +148,7 @@ const CONTRACT_ERRORS: Record<string, string> = {
   MaxIncidentsReached:        'Se alcanzó el límite máximo de incidencias para este envío.',
   ActorDoesNotExist:          'El actor no existe en el contrato.',
   CheckpointNotFound:         'El checkpoint no existe en el contrato.',
-  IncidentNotFound:           'La incidencia no existe. Verifica el ID global de la incidencia.',
+  IncidentNotFound:           'La incidencia no existe. Verifique el ID global de la incidencia.',
   NotPendingAdmin:            'No hay una transferencia de administración pendiente.',
 }
 

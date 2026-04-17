@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {console} from "lib/forge-std/src/console.sol";
-import "../src/LogisticsTracking.sol";
+import {LogisticsTracking} from "../src/LogisticsTracking.sol";
 
 /**
  * @title LogisticsTrackingTest
@@ -369,7 +369,7 @@ contract LogisticsTrackingTest15 is Test {
             "Caja de reactivos no localizada al reiniciar ruta desde bodega temporal Calle 80.");
 
         LogisticsTracking.Shipment memory s = lt.getShipment(shipId);
-        assertEq(uint(inc_type(lt, s.incidentIds[0])),
+        assertEq(uint(incType(lt, s.incidentIds[0])),
             uint(LogisticsTracking.IncidentType.Lost));
         assertFalse(lt.getIncident(s.incidentIds[0]).resolved);
 
@@ -423,7 +423,7 @@ contract LogisticsTrackingTest15 is Test {
             "Inspeccion sanitaria de emergencia iniciada.", NO_TEMP);
 
         LogisticsTracking.Shipment memory s = lt.getShipment(shipId);
-        assertEq(uint(inc_type(lt, s.incidentIds[0])),
+        assertEq(uint(incType(lt, s.incidentIds[0])),
             uint(LogisticsTracking.IncidentType.Unauthorized));
 
         console.log("  Incidencia Unauthorized registrada por inspector INVIMA.");
@@ -1075,7 +1075,7 @@ contract LogisticsTrackingTest15 is Test {
      * @dev Re-registra un actor (previamente desactivado) con nuevo rol.
      *      Solo funciona si el actor ya fue desactivado (isActive = false).
      */
-    function _actors_reregister(
+    function _actorsReregister(
         address _addr,
         string memory _name,
         LogisticsTracking.ActorRole _role,
@@ -1089,7 +1089,7 @@ contract LogisticsTrackingTest15 is Test {
     /**
      * @dev Helper para obtener el tipo de la primera incidencia de un envio.
      */
-    function inc_type(LogisticsTracking _lt, uint256 incId)
+    function incType(LogisticsTracking _lt, uint256 incId)
         internal view returns (LogisticsTracking.IncidentType)
     {
         return _lt.getIncident(incId).incidentType;

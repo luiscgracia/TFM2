@@ -22,6 +22,8 @@ import {
   FieldError,
 } from '../shared'
 
+import { FONDO_BASE64 } from '../../public/fondoPDF64'
+
 // ---------------------------------------------------------------------------
 // loadJsPDF — carga jsPDF y autoTable dinámicamente
 // ---------------------------------------------------------------------------
@@ -92,10 +94,20 @@ export function TraceabilityPanel() {
       const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' })
       const M = 10
       const W = doc.internal.pageSize.getWidth()
+      const H = doc.internal.pageSize.getHeight()
       const azul:      [number, number, number] = [5, 150, 105]
       const negro:     [number, number, number] = [0, 0, 0]
       const blanco:    [number, number, number] = [255, 255, 255]
       const grisClaro: [number, number, number] = [245, 247, 250]
+
+      // Fondo con opacidad 12% — se aplica antes de cada sección de contenido
+      const drawBg = () => {
+        doc.saveGraphicsState()
+        ;(doc as any).setGState(new (doc as any).GState({ opacity: 0.12 }))
+        doc.addImage(FONDO_BASE64, 'JPEG', 0, 0, W, H)
+        doc.restoreGraphicsState()
+      }
+      drawBg()
 
       doc.setFillColor(...azul)
       doc.rect(M, M, W - M * 2, 14, 'F')
@@ -109,7 +121,7 @@ export function TraceabilityPanel() {
       doc.setTextColor(...negro); doc.setFontSize(11); doc.setFont('helvetica', 'bold')
       doc.text(`Envío #${String(shipment.id)} — ${shipment.product}`, M, y)
       y += 6; doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(80, 80, 80)
-      doc.text(`Origen: ${shipment.origin}   →   Destino: ${shipment.destination}`, M, y)
+      doc.text(`Origen: ${shipment.origin}   —   Destino: ${shipment.destination}`, M, y)
       doc.text(`Estado: ${SHIPMENT_STATUSES[statusIdx] ?? '—'}   |   Remitente: ${shortAddr(shipment.sender)}   |   Destinatario: ${shortAddr(shipment.recipient)}`, M, y + 5)
       doc.text(`Creado: ${fmtTs(shipment.dateCreated)}${shipment.dateDelivered > 0n ? `   |   Entregado: ${fmtTs(shipment.dateDelivered)}` : ''}${shipment.requiresColdChain ? '   |   Cadena de frío' : ''}`, M, y + 10)
       y += 20
@@ -135,22 +147,25 @@ export function TraceabilityPanel() {
         doc.text(`Incidencias (${incidents.length})`, M, y); y += 4
         ;(doc as any).autoTable({
           startY: y, margin: { left: M, right: M }, tableWidth: W - M * 2,
-          head: [['Tipo', 'Descripción', 'Reporter', 'Fecha', 'Estado']],
-          body: incidents.map((inc: any) => [INCIDENT_TYPES[Number(inc.incidentType)] ?? '—', inc.description, shortAddr(inc.reporter), fmtTs(inc.timestamp), inc.resolved ? 'Resuelto' : 'Abierto']),
+          head: [['Tipo', 'Descripción', 'Reporter', 'Fecha', 'Estado', 'Notas resolución']],
+          body: incidents.map((inc: any) => [INCIDENT_TYPES[Number(inc.incidentType)] ?? '—', inc.description, shortAddr(inc.reporter), fmtTs(inc.timestamp), inc.resolved ? 'Resuelto' : 'Abierto', (inc.resolved && inc.resolutionNote) ? inc.resolutionNote : '—']),
           headStyles: { fillColor: azul, textColor: blanco, fontStyle: 'bold', fontSize: 8, lineWidth: 0.5, lineColor: negro },
           bodyStyles: { fontSize: 8, textColor: negro, lineWidth: 0.5, lineColor: negro },
           alternateRowStyles: { fillColor: grisClaro },
-          columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 30 }, 3: { cellWidth: 32 }, 4: { cellWidth: 20 } },
+          columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 }, 2: { cellWidth: 28 }, 3: { cellWidth: 30 }, 4: { cellWidth: 18 }, 5: { cellWidth: 'auto' } },
         })
       }
 
       const totalPages = (doc.internal as any).getNumberOfPages()
       for (let p = 1; p <= totalPages; p++) {
-        doc.setPage(p); doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.setFont('helvetica', 'normal')
+        doc.setPage(p)
+        // Re-draw background on every page (page 1 already has it, extra pages need it)
+        if (p > 1) drawBg()
+        doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.setFont('helvetica', 'normal')
         doc.text(`Contrato: ${CONTRACT_ADDRESS}`, M, doc.internal.pageSize.getHeight() - M + 3)
         doc.text(`Página ${p} de ${totalPages}`, W - M, doc.internal.pageSize.getHeight() - M + 3, { align: 'right' })
       }
-      doc.save(`trazabilidad-envio-${id}.pdf`)
+      doc.save(`Envio_#${id}-(trace).pdf`)
     } catch (e) {
       console.error('Error generando PDF:', e)
     } finally {
@@ -193,7 +208,7 @@ export function TraceabilityPanel() {
       {queried && shipment && shipment.id !== 0n && (
         <div className="mt-5 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-400 font-semibold uppercase">Envío #{String(shipment.id)}</span>
+            <span className="text-xs text-slate-400 font-semibold uppercase">Envío #{String(shipment.id)} - </span>
             {statusIdx >= 0 && (
               <span className={`text-sm font-semibold px-2 py-1 rounded-lg uppercase ${STATUS_COLORS[statusIdx]}`}>
                 {SHIPMENT_STATUSES[statusIdx]}
@@ -273,7 +288,7 @@ export function TraceabilityPanel() {
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Tipo', 'Descripción', 'Reporter', 'Fecha', 'Estado'].map(h => (
+                  {['Tipo', 'Descripción', 'Reporter', 'Fecha', 'Estado', 'Notas resolución'].map(h => (
                     <th key={h} style={TH_STYLE}>{h}</th>
                   ))}
                 </tr>
@@ -301,6 +316,12 @@ export function TraceabilityPanel() {
                       {inc.resolved
                         ? <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Resuelto</span>
                         : <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-200">Abierto</span>
+                      }
+                    </td>
+                    <td style={{ ...TD_STYLE, minWidth: '160px', whiteSpace: 'normal' }}>
+                      {inc.resolved && inc.resolutionNote
+                        ? <span className="text-xs text-emerald-700 italic">📋 {inc.resolutionNote}</span>
+                        : <span className="text-xs text-slate-300">—</span>
                       }
                     </td>
                   </tr>

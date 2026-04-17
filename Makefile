@@ -133,9 +133,12 @@ D15 :
 # --------------------------------------------------------------------------------------------------------------------------------------
 
 # ejecutar anvil, cargar envios de prueba e iniciar interfaz gráfica
-1a :
+1avez :
 	gnome-terminal -- bash -c "anvil --dump-state TFM2-state.json; exec bash" && gnome-terminal -- bash -c "make D15; exec bash" && gnome-terminal -- bash -c "cd logistics-frontend && npm run dev; exec bash"
 
 TFM2 :
 	gnome-terminal -- bash -c "anvil --load-state TFM2-state.json; exec bash" && gnome-terminal -- bash -c "cd logistics-frontend && npm run dev; exec bash"
+
+rec :
+	gnome-terminal -- bash -c "anvil; exec bash" && gnome-terminal -- bash -c "cd logistics-frontend && npm run dev; exec bash"
 

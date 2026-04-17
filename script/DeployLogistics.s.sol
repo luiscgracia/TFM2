@@ -2,7 +2,7 @@
 pragma solidity ^0.8.6;
 
 import {Script, console} from "lib/forge-std/src/Script.sol";
-import "../src/LogisticsTracking.sol";
+import {LogisticsTracking} from "../src/LogisticsTracking.sol";
 
 contract DeployLogistics is Script {
     function run() external {

@@ -180,6 +180,7 @@ contract LogisticsTracking {
         string description;
         uint256 timestamp;
         bool resolved;
+        string resolutionNote; // Nota explicando cómo se resolvió la incidencia
     }
 
     // -------------------------------------------------------------------------
@@ -215,7 +216,7 @@ contract LogisticsTracking {
     );
     event ShipmentStatusChanged(uint256 indexed shipmentId, ShipmentStatus newStatus);
     event IncidentReported(uint256 indexed incidentId, uint256 indexed shipmentId, IncidentType incidentType);
-    event IncidentResolved(uint256 indexed incidentId);
+    event IncidentResolved(uint256 indexed incidentId, string resolutionNote);
     event DeliveryConfirmed(uint256 indexed shipmentId, address indexed recipient, uint256 timestamp);
     event ActorRegistered(address indexed actorAddress, string name, ActorRole role);
     event ActorStatusChanged(address indexed actorAddress, bool isActive); // [S-2]
@@ -570,7 +571,8 @@ contract LogisticsTracking {
             reporter: msg.sender,
             description: _desc,
             timestamp: block.timestamp,
-            resolved: false
+            resolved: false,
+            resolutionNote: ""
         });
 
         s.incidentIds.push(incId);
@@ -578,12 +580,13 @@ contract LogisticsTracking {
         return incId;
     }
 
-    function resolveIncident(uint256 _incidentId) external onlyAdmin {
+    function resolveIncident(uint256 _incidentId, string calldata _resolutionNote) external onlyAdmin {
         if (_incidentId == 0 || _incidentId >= _nextIncidentId) {
             revert IncidentNotFound(_incidentId);
         }
         _incidents[_incidentId].resolved = true;
-        emit IncidentResolved(_incidentId);
+        _incidents[_incidentId].resolutionNote = _resolutionNote;
+        emit IncidentResolved(_incidentId, _resolutionNote);
     }
 
     function getIncident(uint256 _incidentId) external view returns (Incident memory) {
