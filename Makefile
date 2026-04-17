@@ -139,6 +139,6 @@ D15 :
 TFM2 :
 	gnome-terminal -- bash -c "anvil --load-state TFM2-state.json; exec bash" && gnome-terminal -- bash -c "cd logistics-frontend && npm run dev; exec bash"
 
-rec :
+start :
 	gnome-terminal -- bash -c "anvil; exec bash" && gnome-terminal -- bash -c "cd logistics-frontend && npm run dev; exec bash"
 
