@@ -57,7 +57,7 @@ export function ActorsTab({ push }: { push: ReturnType<typeof useToast>['push'] 
           inputs: [
             { type: 'address', name: 'actorAddress', indexed: true },
             { type: 'string',  name: 'name',         indexed: false },
-            { type: 'uint8',   name: 'role',          indexed: false },
+            { type: 'uint8',   name: 'role',         indexed: false },
           ],
         },
         fromBlock: BigInt(0),
@@ -340,21 +340,82 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
   const { dark } = useDark()
   const { addrs } = useKnownActors()
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all')
+  const [filterRole, setFilterRole] = useState<number | 'all'>('all')
 
-  const btnFilter = (current: typeof filterActive, value: typeof filterActive, label: string) => (
-    <button
-      onClick={() => setFilterActive(value)}
-      className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${
-        filterActive === value
-          ? 'bg-indigo-600 text-white border-indigo-600'
-          : dark
-            ? 'bg-slate-700 text-slate-300 border-slate-600 hover:border-indigo-400'
-            : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300'
-      }`}
-    >
-      {label}
-    </button>
-  )
+  const btnFilter = (current: typeof filterActive, value: typeof filterActive, label: string) => {
+    const isSelected = filterActive === value
+    return (
+      <button
+        onClick={() => setFilterActive(value)}
+        style={isSelected ? {
+          fontWeight: 700,
+          transform: 'scale(1.07)',
+          background: '#166534',
+          color: '#fff',
+          border: '0px solid #166534',
+          borderRadius: '5px',
+          padding: '6px 14px',
+          fontSize: '12px',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.05em',
+          transition: 'all 0.15s',
+          cursor: 'pointer',
+        } : {
+          fontWeight: 600,
+          background: dark ? '#334155' : '#fff',
+          color: dark ? '#94a3b8' : '#64748b',
+          border: `1.5px solid ${dark ? '#475569' : '#e2e8f0'}`,
+          borderRadius: '5px',
+          padding: '6px 14px',
+          fontSize: '12px',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.05em',
+          transition: 'all 0.15s',
+          cursor: 'pointer',
+        }}
+      >
+        {isSelected ? '✓ ' : ''}{label}
+      </button>
+    )
+  }
+
+  const btnRoleFilter = (roleIdx: number | 'all', label: string) => {
+    const isSelected = filterRole === roleIdx
+    return (
+      <button
+        key={String(roleIdx)}
+        onClick={() => setFilterRole(roleIdx)}
+        style={isSelected ? {
+          fontWeight: 700,
+          transform: 'scale(1.07)',
+          background: '#166534',
+          color: '#fff',
+          border: '0px solid #166534',
+          borderRadius: '5px',
+          padding: '6px 14px',
+          fontSize: '12px',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.05em',
+          transition: 'all 0.15s',
+          cursor: 'pointer',
+        } : {
+          fontWeight: 600,
+          background: dark ? '#334155' : '#fff',
+          color: dark ? '#94a3b8' : '#64748b',
+          border: `1.5px solid ${dark ? '#475569' : '#e2e8f0'}`,
+          borderRadius: '5px',
+          padding: '6px 14px',
+          fontSize: '12px',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.05em',
+          transition: 'all 0.15s',
+          cursor: 'pointer',
+        }}
+      >
+        {isSelected ? '✓ ' : (roleIdx !== 'all' ? `${ROLE_ICONS[roleIdx as number] ?? ''} ` : '')}{label}
+      </button>
+    )
+  }
 
   return (
     <SectionHeader>
@@ -375,7 +436,21 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
             {isSyncing ? '⏳ Sincronizando…' : '⛓ Sync desde chain'}
           </button>
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+
+        {/* Filtro por rol */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: dark ? '#64748b' : '#94a3b8', letterSpacing: '0.05em' }}>
+            &emsp;&emsp;Rol:
+          </span>
+          {btnRoleFilter('all', 'Todos')}
+          {ACTOR_ROLES.slice(1).map((roleName, i) => btnRoleFilter(i + 1, roleName))}
+        </div>
+
+        {/* Filtro por estado */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '20px', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: dark ? '#64748b' : '#94a3b8', letterSpacing: '0.05em' }}>
+            Estado:
+          </span>
           {btnFilter(filterActive, 'all',      'Todos')}
           {btnFilter(filterActive, 'active',   '✅ Activos')}
           {btnFilter(filterActive, 'inactive', '🚫 Inactivos')}
@@ -408,7 +483,7 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
               </thead>
               <tbody>
                 {addrs.map(a => (
-                  <ActorRow key={a} address={a as Address} push={push} filterActive={filterActive} />
+                  <ActorRow key={a} address={a as Address} push={push} filterActive={filterActive} filterRole={filterRole} />
                 ))}
               </tbody>
             </table>
@@ -422,7 +497,7 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
 // ---------------------------------------------------------------------------
 // ActorRow — fila individual de actor
 // ---------------------------------------------------------------------------
-function ActorRow({ address, push, filterActive }: { address: Address; push: ReturnType<typeof useToast>['push']; filterActive: 'all' | 'active' | 'inactive' }) {
+function ActorRow({ address, push, filterActive, filterRole }: { address: Address; push: ReturnType<typeof useToast>['push']; filterActive: 'all' | 'active' | 'inactive'; filterRole: number | 'all' }) {
   const { dark } = useDark()
   const { data: actor, refetch }: any = useReadContract({
     address: CONTRACT_ADDRESS, abi: ABI, functionName: 'getActor', args: [address],
@@ -468,6 +543,7 @@ function ActorRow({ address, push, filterActive }: { address: Address; push: Ret
 
   if (filterActive === 'active'   && !isActive) return null
   if (filterActive === 'inactive' &&  isActive) return null
+  if (filterRole !== 'all' && roleIdx !== filterRole) return null
 
   return (
     <tr style={{ opacity: isActive ? 1 : 0.6 }}
