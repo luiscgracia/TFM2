@@ -148,7 +148,7 @@ export function ShipmentsTable() {
             ({total} envío(s) registrado(s) en el contrato)
           </span>
         </h2>
-        <div className="mt-3 flex gap-2 flex-wrap">
+        <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           <input
             type="text"
             placeholder="🔍 Filtrar por ID…"
@@ -156,9 +156,20 @@ export function ShipmentsTable() {
             onChange={e => setSearch(e.target.value)}
             className="flex-1 min-w-[180px] bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-teal-100 transition-all"
           />
-          <button onClick={() => { setFilterStatus('all'); setSearch('') }} className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${filterStatus === 'all' ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-500 border-slate-200 hover:border-teal-300'}`}>Todos</button>
+          <button
+            onClick={() => { setFilterStatus('all'); setSearch('') }}
+            style={filterStatus === 'all'
+              ? { fontWeight: 700, background: '#0d9488', color: '#fff', border: '1px solid #0d9488', borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' }
+              : { fontWeight: 600, background: '#d3d3d3', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' }}
+          >Todos</button>
           {SHIPMENT_STATUSES.map((s, i) => (
-            <button key={i} onClick={() => setFilterStatus(i)} className={`text-xs font-semibold px-3 py-2 rounded-xl uppercase border transition-colors ${filterStatus === i ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-500 border-slate-200 hover:border-teal-300'}`}>{s}</button>
+            <button
+              key={i}
+              onClick={() => setFilterStatus(i)}
+              style={filterStatus === i
+                ? { fontWeight: 700, background: '#0d9488', color: '#fff', border: '1px solid #0d9488', borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' }
+                : { fontWeight: 600, background: '#d3d3d3', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' }}
+            >{s}</button>
           ))}
         </div>
       </div>

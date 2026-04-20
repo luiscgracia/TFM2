@@ -347,34 +347,9 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
     return (
       <button
         onClick={() => setFilterActive(value)}
-        style={isSelected ? {
-          fontWeight: 700,
-          transform: 'scale(1.07)',
-          background: '#166534',
-          color: '#fff',
-          border: '0px solid #166534',
-          borderRadius: '5px',
-          padding: '6px 14px',
-          fontSize: '12px',
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.05em',
-          transition: 'all 0.15s',
-          cursor: 'pointer',
-        } : {
-          fontWeight: 600,
-          background: dark ? '#334155' : '#fff',
-          color: dark ? '#94a3b8' : '#64748b',
-          border: `1.5px solid ${dark ? '#475569' : '#e2e8f0'}`,
-          borderRadius: '5px',
-          padding: '6px 14px',
-          fontSize: '12px',
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.05em',
-          transition: 'all 0.15s',
-          cursor: 'pointer',
-        }}
+        style={isSelected ? { fontWeight: 700, background: '#0d9488', color: '#fff', border: '1px solid #0d9488', borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' } : { fontWeight: 600, background: dark ? '#fff' : '#D3D3D3', color: dark ? '#94a3b8' : '#64748b', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' }}
       >
-        {isSelected ? '✓ ' : ''}{label}
+        {label}
       </button>
     )
   }
@@ -385,34 +360,9 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
       <button
         key={String(roleIdx)}
         onClick={() => setFilterRole(roleIdx)}
-        style={isSelected ? {
-          fontWeight: 700,
-          transform: 'scale(1.07)',
-          background: '#166534',
-          color: '#fff',
-          border: '0px solid #166534',
-          borderRadius: '5px',
-          padding: '6px 14px',
-          fontSize: '12px',
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.05em',
-          transition: 'all 0.15s',
-          cursor: 'pointer',
-        } : {
-          fontWeight: 600,
-          background: dark ? '#334155' : '#fff',
-          color: dark ? '#94a3b8' : '#64748b',
-          border: `1.5px solid ${dark ? '#475569' : '#e2e8f0'}`,
-          borderRadius: '5px',
-          padding: '6px 14px',
-          fontSize: '12px',
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.05em',
-          transition: 'all 0.15s',
-          cursor: 'pointer',
-        }}
+        style={isSelected ? { fontWeight: 700, background: '#0d9488', color: '#fff', border: '1px solid #0d9488', borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' } : { fontWeight: 600, background: dark ? '#fff' : '#d3d3d3', color: dark ? '#94a3b8' : '#64748b', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderRadius: '4px', padding: '3px 12px', fontSize: '12px', textTransform: 'uppercase' as const, letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s' }}
       >
-        {isSelected ? '✓ ' : (roleIdx !== 'all' ? `${ROLE_ICONS[roleIdx as number] ?? ''} ` : '')}{label}
+        {roleIdx !== 'all' ? `${ROLE_ICONS[roleIdx as number] ?? ''} ` : ''}{label}
       </button>
     )
   }
@@ -447,7 +397,7 @@ function ActorsList({ push, isSyncing, onSync }: { push: ReturnType<typeof useTo
         </div>
 
         {/* Filtro por estado */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '20px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '5px', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: dark ? '#64748b' : '#94a3b8', letterSpacing: '0.05em' }}>
             Estado:
           </span>
